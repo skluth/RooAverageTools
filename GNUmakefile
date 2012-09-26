@@ -5,9 +5,9 @@
 LD = $(CXX)
 CXXFLAGS = -Wall
 
-LIBFILES = AverageDataParser.cc
+LIBFILES = AverageDataParser.cc ClsqAverage.cc
 LIB = libRooAverageTools.so
-TESTFILE = testAverageDataParser.cc
+TESTFILE = testAverageDataParser.cc testClsqAverage.cc
 TESTEXE = $(basename $(TESTFILE) )
 LIBOBJS = $(LIBFILES:.cc=.o)
 DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
@@ -28,7 +28,7 @@ $(DEPS): %.d: %.cc
 $(LIB): $(LIBOBJS)
 	$(LD) -shared -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(TESTEXE): $(TESTFILE:.cc=.o) $(LIB)
+$(TESTEXE): %: %.o $(LIB)
 	$(LD) -o $@ $^ -lboost_unit_test_framework $(LDFLAGS) $(LDLIBS)
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PROJECTPATH)/INIParser ./$@ --log_level=message
 
