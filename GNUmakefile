@@ -14,10 +14,11 @@ DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
 ROOTINC = $(ROOTSYS)/include
 ROOTLIBS = $(ROOTSYS)/lib
 PROJECTPATH = $(shell echo $${PWD%/*} )
-CPPFLAGS = -I $(ROOTINC) -I $(PROJECTPATH)/INIParser
-LDFLAGS = -L $(ROOTLIBS) -L $(PROJECTPATH)/INIParser
+PCKGS = $(PROJECTPATH)/INIParser
+CPPFLAGS = -I $(ROOTINC) $(addprefix -I , $(PCKGS) )
+LDFLAGS = -L $(ROOTLIBS) $(addprefix -L , $(PCKGS) )
 LDLIBS = -lMatrix -lINIParser
-
+LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(PCKGS)
 
 all: $(TESTEXE)
 
@@ -30,7 +31,7 @@ $(LIB): $(LIBOBJS)
 
 $(TESTEXE): %: %.o $(LIB)
 	$(LD) -o $@ $^ -lboost_unit_test_framework $(LDFLAGS) $(LDLIBS)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PROJECTPATH)/INIParser ./$@ --log_level=message
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) ./$@ --log_level=message
 
 clean:
 	rm -f *.o $(DEPS) $(TESTEXE) $(LIB)
