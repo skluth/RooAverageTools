@@ -3,7 +3,7 @@
 # S. Kluth 9/2012
 
 LD = $(CXX)
-CXXFLAGS = -Wall
+CXXFLAGS = -Wall -fPIC
 
 LIBFILES = AverageDataParser.cc ClsqAverage.cc
 LIB = libRooAverageTools.so
