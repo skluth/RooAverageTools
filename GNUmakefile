@@ -11,14 +11,18 @@ TESTFILE = testAverageDataParser.cc testClsqAverage.cc
 TESTEXE = $(basename $(TESTFILE) )
 LIBOBJS = $(LIBFILES:.cc=.o)
 DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
-ROOTINC = $(ROOTSYS)/include
-ROOTLIBS = $(ROOTSYS)/lib
 PROJECTPATH = $(shell echo $${PWD%/*} )
-PCKGS = $(PROJECTPATH)/INIParser
-CPPFLAGS = -I $(ROOTINC) $(addprefix -I , $(PCKGS) )
-LDFLAGS = -L $(ROOTLIBS) $(addprefix -L , $(PCKGS) )
+CPPFLAGS = -I $(ROOTSYS)/include -I $(PROJECTPATH)/INIParser
+LDFLAGS = -L $(ROOTSYS)/lib -L $(PROJECTPATH)/INIParser
 LDLIBS = -lMatrix -lINIParser
-LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(PCKGS)
+ifdef HEPROOT
+CPPFLAGS += -I $(HEPROOT)/include/boost-1_48/
+LDFLAGS += -L $(HEPROOT)/lib64
+LDLIBS += -lboost_unit_test_framework-gcc46-mt-1_48
+else
+LDLIBS += -lboost_unit_test_framework
+endif
+LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(PROJECTPATH)/INIParser
 
 all: $(TESTEXE)
 
@@ -30,8 +34,8 @@ $(LIB): $(LIBOBJS)
 	$(LD) -shared -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
 $(TESTEXE): %: %.o $(LIB)
-	$(LD) -o $@ $^ -lboost_unit_test_framework $(LDFLAGS) $(LDLIBS)
-	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH) ./$@ --log_level=message
+	$(LD) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH): ./$@ --log_level=message
 
 clean:
 	rm -f *.o $(DEPS) $(TESTEXE) $(LIB)
