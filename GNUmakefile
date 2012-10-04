@@ -26,6 +26,8 @@ LDLIBS += -lboost_unit_test_framework
 endif
 LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(PROJECTPATH)/INIParser
 
+.INTERMEDIATE: $(LIBOBJS) $(TESTFILE:.cc=.o)
+
 all: $(TESTEXE)
 
 $(DEPS): %.d: %.cc
@@ -40,5 +42,4 @@ $(TESTEXE): %: %.o $(LIB)
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH): ./$@ --log_level=message
 
 clean:
-	rm -f *.o $(DEPS) $(TESTEXE) $(LIB)
-
+	rm -f $(DEPS) $(TESTEXE) $(LIB)
