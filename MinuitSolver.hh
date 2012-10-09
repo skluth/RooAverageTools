@@ -7,18 +7,19 @@ class minuitSolver {
 
 private:
   TMinuit _minuit;
-  int ndf;
-  TVectorD pars;
-  TVectorD parerrors;
-  std::vector<TString> parnames;
+  int _ndf;
+  TVectorD _pars;
+  TVectorD _parerrors;
+  std::vector<TString> _parnames;
 
   void getPars(TVectorD &pars, TVectorD &parerrors);
   double getStat();
   void printPars(TVectorD pars, TVectorD parerrors, TVectorD parnames, TString option = ".4f");
 
 public:
-  minuitSolver();
-  minuitSolver(void* fnc, TVectorD pars, TVectorD parerrors, int ndf);
+  //  minuitSolver();
+  minuitSolver(void *fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
+  //minuitSolver(void (*)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t) fcn, TVectorD pars, TVectorD parerrors, int ndf, int maxpars = 50);
   //getter
   TVectorD getUpar();
   TVectorD getUparErrors();
