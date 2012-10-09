@@ -32,23 +32,16 @@ public:
 	TMatrixDSym inv;
 	TMatrixD groupmatrix;
 	TMatrixD data;
+	TMatrixD totalerrors;
 public:
 	blue(TString filename);
 	virtual ~blue();
 
 	//__columnVector( self, inlist ):
 	TMatrixD  calcWeightsMatrix();
-
-
-
 	double calcAverage();
-
-
-	    // Calculate chi^2:
-	    //calcChisq()
-
-
-	    //calcPulls( self ):
+	double calcChisq();
+	TMatrixD calcPulls();
 
 	    //# Print the input data:
 	    //printInputs( self, cov=False  ):

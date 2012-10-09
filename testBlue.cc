@@ -55,6 +55,8 @@ public:
     double datadata[]={171.5,  173.1,  174.5};
     blueObject.data.ResizeTo(3,1);
     blueObject.data.SetMatrixArray(datadata);
+
+
     /*
      *
      *
@@ -97,13 +99,43 @@ BOOST_AUTO_TEST_CASE( testCalcAverage ) {
 
 	double result = blueObject.calcAverage();
 
-
 	BOOST_CHECK_CLOSE_FRACTION(expected, result, 1e-9);
+
+}
+
+BOOST_AUTO_TEST_CASE( testCalcChisq ) {
+	BOOST_MESSAGE("Testing >>>>>>>>>> blue::calcChisq()");
+
+	double expected = 0.770025093468;
+
+	double result = blueObject.calcChisq();
+
+	BOOST_CHECK_CLOSE_FRACTION(expected, result, 1e-8);
+
+}
+
+BOOST_AUTO_TEST_CASE( testCalcPulls ) {
+	BOOST_MESSAGE("Testing >>>>>>>>>> blue::calcPulls()");
+
+	double totalErrdata1[]={1,1,1};
+	blueObject.totalerrors.ResizeTo(3,1);
+	blueObject.totalerrors.SetMatrixArray(totalErrdata1);
+	TMatrixD result1=blueObject.calcPulls();
+
+
+	double totalErrdata2[]={3,3,3};
+	blueObject.totalerrors.SetMatrixArray(totalErrdata2);
+	TMatrixD result2=blueObject.calcPulls();
+
+
+
+	for(int i=0; i<3; i++){
+		BOOST_CHECK_CLOSE_FRACTION(result1(1,0), 3.0*result2(1,0), 1e-300);
+	}
 
 
 
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

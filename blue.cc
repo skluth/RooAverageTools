@@ -39,4 +39,22 @@ double blue::calcAverage(){
 
 }
 
+double blue::calcChisq(){
+	TMatrixD delta=data - groupmatrix * calcAverage();
+	TMatrixD deltaT;
+	deltaT.ResizeTo(1,3);
+	deltaT.Transpose(delta);
+	double chisq= (deltaT*inv*delta)(0,0);
+	return chisq;
+}
 
+
+
+// not tested yet
+TMatrixD blue::calcPulls(){
+	TMatrixD delta=data - groupmatrix * calcAverage();
+
+	TMatrixD pulls=delta;
+	pulls/= totalerrors;   // weird: TMatrix knows '/=' but not '/'
+	return pulls;
+}
