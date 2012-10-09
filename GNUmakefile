@@ -5,7 +5,7 @@
 LD = $(CXX)
 CXXFLAGS = -Wall -fPIC
 
-LIBFILES = AverageDataParser.cc ClsqAverage.cc
+LIBFILES = AverageDataParser.cc ClsqAverage.cc MinuitSolver.cc
 LIB = libRooAverageTools.so
 TESTFILE = testAverageDataParser.cc testClsqAverage.cc
 TESTEXE = $(basename $(TESTFILE) )
