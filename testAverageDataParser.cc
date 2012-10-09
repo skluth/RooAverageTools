@@ -132,5 +132,35 @@ BOOST_AUTO_TEST_CASE( testgetCovoption ) {
   BOOST_CHECK_EQUAL(covopts.size(), expectedcovopts.size() );
 }
 
+BOOST_AUTO_TEST_CASE( testSysterrormatrix ) {
+  std::map<unsigned int, std::vector<float> > systerrmatrix;
+  std::map<unsigned int, std::vector<float> > expectedsysterrmatrix;
+  systerrmatrix = parser.getSysterrorMatrix();
+  std::vector<float> tmp;
+  tmp.push_back(1.8865);
+  tmp.push_back(1.8865);
+  tmp.push_back(1.8865);
+  expectedsysterrmatrix[1] = tmp;
+  tmp.clear();
+  tmp.push_back(0.9);
+  tmp.push_back(0.9);
+  tmp.push_back(0.9);
+  expectedsysterrmatrix[2] = tmp;
+  tmp.clear();
+  tmp.push_back(2.4);
+  tmp.push_back(2.42239067);
+  tmp.push_back(2.4419825);
+  expectedsysterrmatrix[3] = tmp;
+
+  std::map<unsigned int, std::vector<float> >::const_iterator expecteditr = expectedsysterrmatrix.begin();
+  for(std::map<unsigned int, std::vector<float> >::const_iterator itr = systerrmatrix.begin(); itr != systerrmatrix.end(); ++itr) {
+    BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
+    BOOST_CHECK_EQUAL_COLLECTIONS(itr->second.begin(), itr->second.end(), expecteditr->second.begin(), expecteditr->second.end());
+    ++expecteditr;
+  }
+  BOOST_CHECK_EQUAL(systerrmatrix.size(), expectedsysterrmatrix.size() );
+  
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 

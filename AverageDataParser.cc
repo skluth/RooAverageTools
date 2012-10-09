@@ -80,3 +80,23 @@ std::map<string, string> AverageDataParser::getCovoption() const {
   covopts["04err4"] = string("f");
   return covopts;
 }
+
+std::map<unsigned int, std::vector<float> > AverageDataParser::getSysterrorMatrix() const {
+  std::map<unsigned int, std::vector<float> > systerrmatrix;
+  std::vector<float> tmp;
+  tmp.push_back(1.8865);
+  tmp.push_back(1.8865);
+  tmp.push_back(1.8865);
+  systerrmatrix[1] = tmp;
+  tmp.clear();
+  tmp.push_back(0.9);
+  tmp.push_back(0.9);
+  tmp.push_back(0.9);
+  systerrmatrix[2] = tmp;
+  tmp.clear();
+  tmp.push_back(2.4);
+  tmp.push_back(2.42239067);
+  tmp.push_back(2.4419825);
+  systerrmatrix[3] = tmp;
+  return systerrmatrix;
+}
