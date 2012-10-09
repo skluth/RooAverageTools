@@ -14,7 +14,7 @@ DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
 PROJECTPATH = $(shell echo $${PWD%/*} )
 CPPFLAGS = -I $(PROJECTPATH)/INIParser
 LDFLAGS = -L $(PROJECTPATH)/INIParser
-LDLIBS = -lINIParser -lMatrix 
+LDLIBS = -lINIParser -lMatrix -lMinuit
 ifdef HEPROOT
 CPPFLAGS += -I $(HEPROOT)/include -I $(HEPROOT)/include/boost-1_48/
 LDFLAGS += -L $(HEPROOT)/lib64
