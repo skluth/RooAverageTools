@@ -1,0 +1,9 @@
+class minuitSolver {
+private:
+  TMinuit _minuit;
+  int ndf;
+  std::vector<double> pars;
+  std::vector<double> parerrors;
+  std::vector<string> parnames;
+
+}
