@@ -2,15 +2,12 @@
 # GNU makefile for RooAverageTools
 # S. Kluth 9/2012
 
-# CXX = g++-4.7
 LD = $(CXX)
 CXXFLAGS = -Wall -fPIC
 
- LIBFILES = minuitSolver.cc AverageDataParser.cc ClsqAverage.cc 
-#LIBFILES = AverageDataParser.cc ClsqAverage.cc 
+LIBFILES = AverageDataParser.cc ClsqAverage.cc
 LIB = libRooAverageTools.so
- TESTFILE = testminuitSolver.cc testAverageDataParser.cc testClsqAverage.cc
-#TESTFILE = testAverageDataParser.cc testClsqAverage.cc
+TESTFILE = testAverageDataParser.cc testClsqAverage.cc
 TESTEXE = $(basename $(TESTFILE) )
 LIBOBJS = $(LIBFILES:.cc=.o)
 DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
@@ -18,11 +15,10 @@ PROJECTPATH = $(shell echo $${PWD%/*} )
 CPPFLAGS = -I $(PROJECTPATH)/INIParser
 LDFLAGS = -L $(PROJECTPATH)/INIParser
 LDLIBS = -lINIParser -lMatrix 
-# LDLIBS = -lMatrix 
 ifdef HEPROOT
-CPPFLAGS += -I $(HEPROOT)/include -I $(HEPROOT)/include/boost-1_46/
+CPPFLAGS += -I $(HEPROOT)/include -I $(HEPROOT)/include/boost-1_48/
 LDFLAGS += -L $(HEPROOT)/lib64
-LDLIBS += -lboost_unit_test_framework-gcc46-mt-1_46
+LDLIBS += -lboost_unit_test_framework-gcc46-mt-1_48
 else
 CPPFLAGS += -I $(ROOTSYS)/include
 LDFLAGS += -L $(ROOTSYS)/lib 
