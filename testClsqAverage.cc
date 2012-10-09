@@ -38,7 +38,7 @@ BOOST_FIXTURE_TEST_SUITE( clsqaveragesuite, ClsqAverageTestFixture )
 // Test returning (dummy) average:
 BOOST_AUTO_TEST_CASE( testgetAverage ) {
   Double_t avg= clsqavg.getAverage();
-  Double_t expected= 99.0;
+  Double_t expected= 170.709196921;
   BOOST_CHECK_CLOSE( avg, expected, 0.0001 );
 }
 
