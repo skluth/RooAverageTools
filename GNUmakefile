@@ -5,7 +5,7 @@
 LD = $(CXX)
 CXXFLAGS = -Wall -fPIC
 
-LIBFILES = AverageDataParser.cc ClsqAverage.cc
+LIBFILES = AverageDataParser.cc ClsqAverage.cc MinuitSolver.cc
 LIB = libRooAverageTools.so
 TESTFILE = testAverageDataParser.cc testClsqAverage.cc
 TESTEXE = $(basename $(TESTFILE) )
@@ -14,7 +14,7 @@ DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
 PROJECTPATH = $(shell echo $${PWD%/*} )
 CPPFLAGS = -I $(PROJECTPATH)/INIParser
 LDFLAGS = -L $(PROJECTPATH)/INIParser
-LDLIBS = -lINIParser -lMatrix 
+LDLIBS = -lINIParser -lMatrix -lMinuit
 ifdef HEPROOT
 CPPFLAGS += -I $(HEPROOT)/include -I $(HEPROOT)/include/boost-1_48/
 LDFLAGS += -L $(HEPROOT)/lib64
