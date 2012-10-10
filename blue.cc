@@ -51,7 +51,7 @@ double blue::calcChisq(){
 
 
 
-// not tested yet
+
 TMatrixD blue::calcPulls(){
 	TMatrixD delta=data - groupmatrix * calcAverage();
 
