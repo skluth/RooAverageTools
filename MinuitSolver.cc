@@ -2,19 +2,19 @@
 #include <vector>
 #include <cmath>
 
-minuitSolver::minuitSolver(fcn_t fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars)
+minuitSolver::minuitSolver(fcn_t fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars):
+  _minuit(new TMinuit(maxpars)),
+  _pars(pars),
+  _ndf(ndf),
+  _parerrors(parerrors),
+  _parnames(parnames)
 {
   if(pars.GetNoElements() > maxpars)
   {
     std::cerr << "More than " << maxpars << " parameters, increase maxpars" << std::endl;
   }
-  _minuit = new TMinuit(maxpars);
-  _pars = pars;
-  _ndf = ndf;
-  _parerrors = parerrors;
-  _parnames = parnames;
-  _minuit->SetFCN(fcn);
 
+  _minuit->SetFCN(fcn);
   Int_t nPars = _pars.GetNoElements();
   for(int iPar = 0; iPar < nPars; ++iPar){
     int error = _minuit->DefineParameter(iPar, parnames[iPar].Data(), _pars(iPar), _parerrors(iPar),0.0, 0.0);
