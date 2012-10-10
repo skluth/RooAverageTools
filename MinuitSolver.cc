@@ -14,14 +14,15 @@ minuitSolver::minuitSolver(fcn_t fcn, TVectorD pars, std::vector<TString> parnam
   _parnames = parnames;
   _minuit->SetFCN(fcn);
   std::vector<TString>::iterator it_names = _parnames.begin();
-  Int_t nPar = 0;
+  Int_t iPar = 0;
   Int_t error;
   while(it_names != _parnames.end()){
-    error = _minuit->DefineParameter(nPar, (*it_names).Data(), _pars(nPar), _parerrors(nPar),0.0, 0.0);
+    error = _minuit->DefineParameter(iPar, (*it_names).Data(), _pars(iPar), _parerrors(iPar),0.0, 0.0);
     if (error != 0){
       std::cerr << "Minuit define parameter error:" << error << std::endl;
     }
-    nPar++;
+    it_names++;
+    iPar++;
   }
 }
 
@@ -52,12 +53,13 @@ minuitSolver::~minuitSolver()
     return std::pair<TVectorD, TVectorD>(pars, parerrors);
   }
   
-//   TVectorD minuitSolver::getUparNames(){
-//   }
-//   
-//   TMatrixD minuitSolver::getCovarianceMatrix(){
-//   }
-// 
+  TMatrixD minuitSolver::getCovarianceMatrix(){
+    int nPars = _pars.GetNoElements();
+    TMatrixD covmat(nPars, nPars);
+    _minuit->mnemat(covmat.GetMatrixArray(), nPars);
+    return covmat;
+  }
+
 //   TMatrixD minuitSolver::getCorrelationMatrix(){
 //   }
 // 

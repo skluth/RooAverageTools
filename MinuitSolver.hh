@@ -7,12 +7,12 @@
 typedef void (* fcn_t)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t);
 
 struct stat_t {
-  double min;
-  double edm;
-  double errdef;
-  int npari;
-  int nparx;
-  int status;
+  Double_t min;
+  Double_t edm;
+  Double_t errdef;
+  Int_t npari;
+  Int_t nparx;
+  Int_t status;
 };	
 
 class minuitSolver {
