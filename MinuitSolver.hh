@@ -3,6 +3,18 @@
 #include "TVectorD.h"
 #include "TMinuit.h"
 #include "TString.h"
+
+typedef void (* fcn_t)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t);
+
+struct stat_t {
+  double min;
+  double edm;
+  double errdef;
+  int npari;
+  int nparx;
+  int status;
+};	
+
 class minuitSolver {
 
 private:
@@ -13,13 +25,11 @@ private:
   std::vector<TString> _parnames;
 
   void getPars(TVectorD &pars, TVectorD &parerrors);
-  double getStat();
+  stat_t getStat();
   void printPars(TVectorD pars, TVectorD parerrors, TVectorD parnames, TString option = ".4f");
 
 public:
-  //  minuitSolver();
-  minuitSolver(void *fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
-  //minuitSolver(void (*)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t) fcn, TVectorD pars, TVectorD parerrors, int ndf, int maxpars = 50);
+  minuitSolver(fcn_t fcn, TVectorD pars,  std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
   ~minuitSolver();
   //getter
   TVectorD getUpar();
@@ -35,7 +45,6 @@ public:
   void printCorrelations();
 
   //other
-  void minuitCommand(TString command);
   void solve(bool Blobel);
   
 };
