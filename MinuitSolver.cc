@@ -1,5 +1,6 @@
 #include "MinuitSolver.hh"
 #include <vector>
+#include <cmath>
 
 minuitSolver::minuitSolver(fcn_t fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars)
 {
@@ -13,16 +14,13 @@ minuitSolver::minuitSolver(fcn_t fcn, TVectorD pars, std::vector<TString> parnam
   _parerrors = parerrors;
   _parnames = parnames;
   _minuit->SetFCN(fcn);
-  std::vector<TString>::iterator it_names = _parnames.begin();
-  Int_t iPar = 0;
-  Int_t error;
-  while(it_names != _parnames.end()){
-    error = _minuit->DefineParameter(iPar, (*it_names).Data(), _pars(iPar), _parerrors(iPar),0.0, 0.0);
+
+  Int_t nPars = _pars.GetNoElements();
+  for(int iPar = 0; iPar < nPars; ++iPar){
+    int error = _minuit->DefineParameter(iPar, parnames[iPar].Data(), _pars(iPar), _parerrors(iPar),0.0, 0.0);
     if (error != 0){
       std::cerr << "Minuit define parameter error:" << error << std::endl;
     }
-    it_names++;
-    iPar++;
   }
 }
 
@@ -60,9 +58,18 @@ minuitSolver::~minuitSolver()
     return covmat;
   }
 
-//   TMatrixD minuitSolver::getCorrelationMatrix(){
-//   }
-// 
+  TMatrixD minuitSolver::getCorrelationMatrix(){
+    int nPars = _pars.GetNoElements();
+    TMatrixD corrmat(nPars,nPars);
+    TMatrixD covmat(getCovarianceMatrix());
+    for (int i = 0; i < nPars; ++i) {
+      for (int j = 0; j < nPars; ++j) {
+	corrmat(i,j) = covmat(i,j)/sqrt(covmat(i,i)*covmat(j,j));
+      }
+    }
+    return corrmat;
+  }
+
 // //   print
 //   void minuitSolver::printResult(TString option, bool cov, bool cor){
 //   }
