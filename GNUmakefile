@@ -7,7 +7,7 @@ CXXFLAGS = -Wall -fPIC
 
 LIBFILES = AverageDataParser.cc ClsqAverage.cc MinuitSolver.cc blue.cc
 LIB = libRooAverageTools.so
-TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc
+TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc testMinuitSolver.cc
 TESTEXE = $(basename $(TESTFILE) )
 LIBOBJS = $(LIBFILES:.cc=.o)
 DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
