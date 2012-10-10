@@ -6,7 +6,7 @@
 class minuitSolver {
 
 private:
-  TMinuit _minuit;
+  TMinuit* _minuit;
   int _ndf;
   TVectorD _pars;
   TVectorD _parerrors;
@@ -20,6 +20,7 @@ public:
   //  minuitSolver();
   minuitSolver(void *fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
   //minuitSolver(void (*)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t) fcn, TVectorD pars, TVectorD parerrors, int ndf, int maxpars = 50);
+  ~minuitSolver();
   //getter
   TVectorD getUpar();
   TVectorD getUparErrors();
