@@ -182,6 +182,59 @@ BOOST_AUTO_TEST_CASE( testgetCovariances ) {
  }
 
 
+BOOST_AUTO_TEST_SUITE_END()
+
+class AverageDataParserOptionsFixture {
+public:
+  AverageDataParserOptionsFixture() : parser( "testOptions.txt" ) {
+    BOOST_MESSAGE( "Create AverageDataParserOptionsFixture" );
+  }
+  virtual ~AverageDataParserOptionsFixture() {
+    BOOST_MESSAGE( "Tear down AverageDataParserOptionsFixture" );
+  }
+  AverageDataParser parser;
+};
+
+BOOST_FIXTURE_TEST_SUITE( averagedataparseroptionssuite, AverageDataParserOptionsFixture )
+
+BOOST_AUTO_TEST_CASE( testErrors ) {
+  std::map<string, std::vector<float> > errors = parser.getErrors();
+  std::map<string, std::vector<float> > expectederrors;
+  std::vector<float> tmp;
+  tmp.push_back(0.343);
+  tmp.push_back(0.38082);
+  tmp.push_back(0.5235);
+  expectederrors["00stat"] = tmp;
+  tmp.clear();
+  tmp.push_back(1.8865);
+  tmp.push_back(2.2503);
+  tmp.push_back(2.6175);
+  expectederrors["01erra"] = tmp;
+  tmp.clear();
+  tmp.push_back(0.9);
+  tmp.push_back(1.5);
+  tmp.push_back(1.9);
+  expectederrors["02errb"] = tmp;
+  tmp.clear();
+  tmp.push_back(2.4);
+  tmp.push_back(3.1);
+  tmp.push_back(3.5);
+  expectederrors["03errc"] = tmp;
+  tmp.clear();
+  
+  bool equalEntries = (errors.size() == expectederrors.size() );
+  BOOST_CHECK_MESSAGE(equalEntries, "Errors and expectedErrors have different size");
+  if (equalEntries) { //iterate over entries and check they are the same
+    std::map<string, std::vector<float> >::const_iterator expecteditr = expectederrors.begin();
+    for(std::map<string, std::vector<float> >::const_iterator itr = errors.begin(); itr != errors.end(); ++itr) {
+      BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
+      BOOST_CHECK_EQUAL_COLLECTIONS(itr->second.begin(), itr->second.end(),
+				    expecteditr->second.begin(), expecteditr->second.end() );
+      ++expecteditr;
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE( testCovariances ) {
   std::map<string,TMatrixD*> covariances, expectedCovariances;
   //covariances = parser.getCovariances()
@@ -198,13 +251,27 @@ BOOST_AUTO_TEST_CASE( testCovariances ) {
   TMatrixD myMatrix4(3,3,matrixData4);
   expectedCovariances["03errc"] = &myMatrix4;
   
-  std::map<string, TMatrixD* >::const_iterator expecteditr = expectedCovariances.begin();
-  for(std::map<string, TMatrixD* >::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
-    BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
-    //BOOST_CHECK_EQUAL(*(itr->second), *(expecteditr->second));
-    ++expecteditr;
-  }  
-  BOOST_CHECK_EQUAL(covariances.size(), expectedCovariances.size() );
+  bool equalEntries = (covariances.size() == expectedCovariances.size() );
+  BOOST_CHECK_MESSAGE(equalEntries, "Covariances and expectedCovariances have different size");
+  if (equalEntries) { //iterate over entries and check they are the same
+    std::map<string, TMatrixD* >::const_iterator expecteditr = expectedCovariances.begin();
+    for(std::map<string, TMatrixD* >::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
+      BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
+      double* serialisedMatrix = (itr->second)->GetMatrixArray();
+      double* serialisedExpectedMatrix = (expecteditr->second)->GetMatrixArray();
+      int matrixSize = (itr->second)->GetNoElements();
+      int expectedMatrixSize = (expecteditr->second)->GetNoElements();
+      BOOST_CHECK_EQUAL(matrixSize, expectedMatrixSize);
+      int matrixNcols = (itr->second)->GetNcols();
+      int expectedMatrixNcols = (expecteditr->second)->GetNcols();
+      BOOST_CHECK_EQUAL( matrixNcols, expectedMatrixNcols);
+      for (int i=0; i<matrixSize; i++)
+	{
+	  BOOST_CHECK_EQUAL(serialisedMatrix[i],serialisedExpectedMatrix[i]);
+	}
+      ++expecteditr;
+    }  
+  }
 }
 
 BOOST_AUTO_TEST_CASE( testSysterrormatrix ) {
@@ -227,15 +294,33 @@ BOOST_AUTO_TEST_CASE( testSysterrormatrix ) {
   tmp.push_back(2.4419825);
   expectedsysterrmatrix[3] = tmp;
 
-  std::map<unsigned int, std::vector<float> >::const_iterator expecteditr = expectedsysterrmatrix.begin();
-  for(std::map<unsigned int, std::vector<float> >::const_iterator itr = systerrmatrix.begin(); itr != systerrmatrix.end(); ++itr) {
-    BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
-    BOOST_CHECK_EQUAL_COLLECTIONS(itr->second.begin(), itr->second.end(), expecteditr->second.begin(), expecteditr->second.end());
-    ++expecteditr;
+  bool equalEntries = (systerrmatrix.size() == expectedsysterrmatrix.size() );
+  BOOST_CHECK_MESSAGE(equalEntries, "systerrmatrix and expectedsysterrmatrix have different size");
+  if (equalEntries) { //iterate over entries and check they are the same
+    std::map<unsigned int, std::vector<float> >::const_iterator expecteditr = expectedsysterrmatrix.begin();
+    for(std::map<unsigned int, std::vector<float> >::const_iterator itr = systerrmatrix.begin(); itr != systerrmatrix.end(); ++itr) {
+      BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
+      BOOST_CHECK_EQUAL_COLLECTIONS(itr->second.begin(), itr->second.end(), expecteditr->second.begin(), expecteditr->second.end());
+      ++expecteditr;
+    }
   }
-  BOOST_CHECK_EQUAL(systerrmatrix.size(), expectedsysterrmatrix.size() );
-  
 }
-
+  
 BOOST_AUTO_TEST_SUITE_END()
 
+
+class AverageDataParserGroupFixture {
+public:
+  AverageDataParserGroupFixture() : parser( "valassi1.txt" ) {
+    BOOST_MESSAGE( "Create AverageDataParserGroupFixture" );
+  }
+  virtual ~AverageDataParserGroupFixture() {
+    BOOST_MESSAGE( "Tear down AverageDataParserGroupFixture" );
+  }
+  AverageDataParser parser;
+};
+
+BOOST_FIXTURE_TEST_SUITE( averagedataparsergroupsuite, AverageDataParserGroupFixture )
+
+
+BOOST_AUTO_TEST_SUITE_END()
