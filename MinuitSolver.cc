@@ -39,14 +39,19 @@ minuitSolver::~minuitSolver()
     return hstat;
   }
 
-
-//   TVectorD minuitSolver::getUpar(){
-//     
-//   }
-//   
-//   TVectorD minuitSolver::getUparErrors(){
-//   }
-//   
+  std::pair<TVectorD, TVectorD> minuitSolver::getPars(){
+    int nPars = _pars.GetNoElements();
+    TVectorD pars(nPars);
+    TVectorD parerrors(nPars);
+    for (int iPar = 0; iPar < nPars; ++iPar){
+      int ier = _minuit->GetParameter(iPar, pars(iPar), parerrors(iPar));
+      if (ier < 0) {
+	std::cerr << "Parameter " << iPar << " not defined!" << std::endl;
+      }
+    }
+    return std::pair<TVectorD, TVectorD>(pars, parerrors);
+  }
+  
 //   TVectorD minuitSolver::getUparNames(){
 //   }
 //   
@@ -56,10 +61,7 @@ minuitSolver::~minuitSolver()
 //   TMatrixD minuitSolver::getCorrelationMatrix(){
 //   }
 // 
-//   double minuitSolver::getChisq(){
-//   }
-// 
-//   //print
+// //   print
 //   void minuitSolver::printResult(TString option, bool cov, bool cor){
 //   }
 // 

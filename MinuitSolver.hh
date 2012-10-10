@@ -24,20 +24,22 @@ private:
   TVectorD _parerrors;
   std::vector<TString> _parnames;
 
-  void getPars(TVectorD &pars, TVectorD &parerrors);
+  std::pair<TVectorD, TVectorD> getPars();
   stat_t getStat();
   void printPars(TVectorD pars, TVectorD parerrors, TVectorD parnames, TString option = ".4f");
-
+  
 public:
   minuitSolver(fcn_t fcn, TVectorD pars,  std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
   ~minuitSolver();
   //getter
-  TVectorD getUpar();
-  TVectorD getUparErrors();
-  TVectorD getUparNames();
+  int getNdof() { return _ndf;}
+  TVectorD getUpar() { return getPars().first; }
+  TVectorD getUparErrors() { return getPars().second; }
+  std::vector<TString> getUparNames() { return _parnames; }
   TMatrixD getCovarianceMatrix();
   TMatrixD getCorrelationMatrix();
-  double getChisq();
+  int getStatus(){ return getStat().status; }
+  double getChisq(){ return getStat().min; }
 
   //print
   void printResult(TString option = ".4f", bool cov = false, bool cor = false);
