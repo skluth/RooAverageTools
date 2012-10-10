@@ -1,8 +1,7 @@
 #include "MinuitSolver.hh"
 #include <vector>
 
-//minuitSolver(void (*)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t) fcn, TVectorD pars, TVectorD parerrors, int ndf, int maxpars){
-minuitSolver::minuitSolver(void *fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars)
+minuitSolver::minuitSolver(fcn_t fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars)
 {
   if(pars.GetNoElements() > maxpars)
   {
@@ -30,3 +29,55 @@ minuitSolver::~minuitSolver()
 {
   delete _minuit;
 }
+
+  //getter
+  stat_t minuitSolver::getStat(){
+    stat_t hstat;
+    
+    _minuit->mnstat(hstat.min, hstat.edm, hstat.errdef, 
+		    hstat.npari, hstat.nparx, hstat.status);
+    return hstat;
+  }
+
+
+//   TVectorD minuitSolver::getUpar(){
+//     
+//   }
+//   
+//   TVectorD minuitSolver::getUparErrors(){
+//   }
+//   
+//   TVectorD minuitSolver::getUparNames(){
+//   }
+//   
+//   TMatrixD minuitSolver::getCovarianceMatrix(){
+//   }
+// 
+//   TMatrixD minuitSolver::getCorrelationMatrix(){
+//   }
+// 
+//   double minuitSolver::getChisq(){
+//   }
+// 
+//   //print
+//   void minuitSolver::printResult(TString option, bool cov, bool cor){
+//   }
+// 
+//   void minuitSolver::printCovariances(){
+//   }
+// 
+//   void minuitSolver::printCorrelations(){
+//   }
+
+
+void minuitSolver::solve(bool Blobel)
+{
+  TString command("MIGRAD");
+  Int_t error = _minuit->Command(command.Data());
+  if(error != 0)
+  {
+    std::cerr << "Minuit command " << command.Data() << " failed: " << error << std::endl;
+  }
+}
+ 
+ 
