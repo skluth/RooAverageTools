@@ -12,6 +12,9 @@
 #include <vector>
 #include <map>
 
+#include "TObject.h"
+#include "TMatrixD.h"
+
 // BOOST test stuff:
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE averagedataparsertests
@@ -118,7 +121,7 @@ BOOST_AUTO_TEST_CASE( testgetTotalErrors ) {
 BOOST_AUTO_TEST_CASE( testgetCovoption ) {
   std::map<string, string> covopts = parser.getCovoption();
   std::map<string, string> expectedcovopts;
-  expectedcovopts["00stat"] = string("c"); 
+  expectedcovopts["00stat"] = string("c");
   expectedcovopts["01err1"] = string("m");
   expectedcovopts["02err2"] = string("m");
   expectedcovopts["03err3"] = string("p");
@@ -130,6 +133,51 @@ BOOST_AUTO_TEST_CASE( testgetCovoption ) {
     ++expecteditr;
   }
   BOOST_CHECK_EQUAL(covopts.size(), expectedcovopts.size() );
+}
+
+BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
+  std::map<string, string > correlations = parser.getCorrelations();
+  std::map<string, string > expectedcorrelations;
+  string tmp = "1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0";
+  expectedcorrelations["00stat"] = tmp;
+  tmp = "p, p, p, p, p, p, p, p, p";
+  expectedcorrelations["01err1"] = tmp;
+  tmp = "f, f, f, f, f, f, f, f, f";
+  expectedcorrelations["02err2"] = tmp;
+  std::map<string, string >::const_iterator expecteditr = expectedcorrelations.begin();
+  for(std::map<string, string >::const_iterator itr = correlations.begin(); itr != correlations.end(); ++itr) {
+    BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
+    BOOST_CHECK_EQUAL(itr->second, expecteditr->second);
+    ++expecteditr;
+  }
+  BOOST_CHECK_EQUAL(correlations.size(), expectedcorrelations.size() );
+}
+
+BOOST_AUTO_TEST_CASE( testgetCovariances ) {
+  std::map<string, TMatrixD> covariances;
+  std::map<string, TMatrixD> expectedcovariances;
+  double data[] = {0.09, 0.0, 0.0, 0.0, 0.1089, 0.0, 0.0, 0.0, 0.16};
+  TMatrixD tmp(3,3,data);
+    /* Python
+        covariances= self.__parser.getCovariances()
+        expectedCovariances= { '00stat': matrix( [ [ 0.09, 0.0,  0.0 ],
+                                                   [ 0.0, 0.1089, 0.0 ],
+                                                   [ 0.0, 0.0, 0.16 ] ] ), 
+                               '01err1': matrix( [ [ 1.21, 1.21, 1.21 ],
+                                                   [ 1.21, 1.69, 1.69 ],
+                                                   [ 1.21, 1.69, 2.25 ] ] ), 
+                               '03err3': matrix( [ [ 5.76, 5.76, 5.76 ],
+                                                   [ 5.76, 9.61, 9.61 ],
+                                                   [ 5.76, 9.61, 12.25 ] ] ),
+                               '02err2': matrix( [ [ 0.81, 1.35, 1.71 ],
+                                                   [ 1.35, 2.25, 2.85 ],
+                                                   [ 1.71, 2.85, 3.61 ] ] ), 
+                               '04err4': matrix( [ [ 1.96, 4.06, 4.62 ],
+                                                   [ 4.06, 8.41, 9.57 ],
+                                                   [ 4.62, 9.57, 10.89 ] ] ) }
+        self.assertEqual( sorted( covariances.keys() ), 
+                          sorted( expectedCovariances.keys() ) )
+                          */
 }
 
 BOOST_AUTO_TEST_CASE( testSysterrormatrix ) {

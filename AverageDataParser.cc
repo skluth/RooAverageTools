@@ -81,6 +81,17 @@ std::map<string, string> AverageDataParser::getCovoption() const {
   return covopts;
 }
 
+std::map<string, string> AverageDataParser::getCorrelations() const {
+  std::map<string, string> correlations;
+  string tmp = "1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0";
+  correlations["00stat"] = tmp;
+  tmp = "p, p, p, p, p, p, p, p, p";
+  correlations["01err1"] = tmp;
+  tmp = "f, f, f, f, f, f, f, f, f";
+  correlations["02err2"] = tmp;
+  return correlations;
+}
+
 std::map<unsigned int, std::vector<float> > AverageDataParser::getSysterrorMatrix() const {
   std::map<unsigned int, std::vector<float> > systerrmatrix;
   std::vector<float> tmp;

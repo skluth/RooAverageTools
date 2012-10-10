@@ -27,6 +27,8 @@ public:
 
   std::map<string, string> getCovoption() const;
 
+  std::map<string, string> getCorrelations() const;
+
   std::map<unsigned int, std::vector<float> > getSysterrorMatrix() const;
 
 private:
