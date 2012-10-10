@@ -135,6 +135,7 @@ BOOST_AUTO_TEST_CASE( testgetCovoption ) {
   BOOST_CHECK_EQUAL(covopts.size(), expectedcovopts.size() );
 }
 
+
 BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
   std::map<string, string > correlations = parser.getCorrelations();
   std::map<string, string > expectedcorrelations;
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
   for(std::map<string, string >::const_iterator itr = correlations.begin(); itr != correlations.end(); ++itr) {
     BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
     BOOST_CHECK_EQUAL(itr->second, expecteditr->second);
-    ++expecteditr;
+    ++expecteditr;  
   }
   BOOST_CHECK_EQUAL(correlations.size(), expectedcorrelations.size() );
 }
@@ -178,6 +179,32 @@ BOOST_AUTO_TEST_CASE( testgetCovariances ) {
         self.assertEqual( sorted( covariances.keys() ), 
                           sorted( expectedCovariances.keys() ) )
                           */
+ }
+
+
+BOOST_AUTO_TEST_CASE( testCovariances ) {
+  std::map<string,TMatrixD*> covariances, expectedCovariances;
+  //covariances = parser.getCovariances()
+  double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
+  TMatrixD myMatrix1(3,3,matrixData1);
+  expectedCovariances["00stat"] = &myMatrix1;
+  double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
+  TMatrixD myMatrix2(3,3,matrixData2);
+  expectedCovariances["01erra"] = &myMatrix2;
+  double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
+  TMatrixD myMatrix3(3,3,matrixData3);
+  expectedCovariances["02errb"] = &myMatrix3;
+  double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
+  TMatrixD myMatrix4(3,3,matrixData4);
+  expectedCovariances["03errc"] = &myMatrix4;
+  
+  std::map<string, TMatrixD* >::const_iterator expecteditr = expectedCovariances.begin();
+  for(std::map<string, TMatrixD* >::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
+    BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
+    //BOOST_CHECK_EQUAL(*(itr->second), *(expecteditr->second));
+    ++expecteditr;
+  }  
+  BOOST_CHECK_EQUAL(covariances.size(), expectedCovariances.size() );
 }
 
 BOOST_AUTO_TEST_CASE( testSysterrormatrix ) {
