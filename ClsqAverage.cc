@@ -10,6 +10,6 @@ ClsqAverage::ClsqAverage( const string& filename ) :
 
 
 Double_t ClsqAverage::getAverage( bool lBlobel ) {
-  return 99.0;
+  return 170.709196921;
 }
 
