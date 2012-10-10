@@ -33,6 +33,7 @@ public:
 	TMatrixD groupmatrix;
 	TMatrixD data;
 	TMatrixD totalerrors;
+	int dim;  // max number of rows/columns
 public:
 	blue(TString filename);
 	virtual ~blue();

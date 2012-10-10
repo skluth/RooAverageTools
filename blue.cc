@@ -8,7 +8,7 @@
 #include "blue.hh"
 
 blue::blue(TString filename) {
-
+	dim=3;
 }
 
 blue::~blue() {
@@ -18,7 +18,8 @@ blue::~blue() {
 TMatrixD blue::calcWeightsMatrix() {
 
 	TMatrixD gmTrans;
-	gmTrans.ResizeTo(1, 3);
+
+	gmTrans.ResizeTo(1, dim);
 	gmTrans.Transpose(groupmatrix);
 
 	TMatrixD utvinvu = gmTrans * inv * groupmatrix;
@@ -42,7 +43,7 @@ double blue::calcAverage(){
 double blue::calcChisq(){
 	TMatrixD delta=data - groupmatrix * calcAverage();
 	TMatrixD deltaT;
-	deltaT.ResizeTo(1,3);
+	deltaT.ResizeTo(1,dim);
 	deltaT.Transpose(delta);
 	double chisq= (deltaT*inv*delta)(0,0);
 	return chisq;
