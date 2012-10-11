@@ -6,6 +6,7 @@
  */
 
 #include "blue.hh"
+#include <iostream>
 
 
 
@@ -15,8 +16,19 @@ blue::blue(string filename) {
 	errors=dataparser.getErrors();
 	names=dataparser.getNames();
 	covopts=dataparser.getCovoption();
-	totalerrors=_columnVector(dataparser.getTotalErrors());
-	data=_columnVector(dataparser.getValues());
+
+	// lovely ROOT...
+	TMatrixD tmp1(_columnVector(dataparser.getTotalErrors()));
+	totalerrors.ResizeTo(tmp1);
+	totalerrors=tmp1;
+
+	TMatrixD tmp2(_columnVector(dataparser.getValues()));
+	data.ResizeTo(tmp2);
+	data=tmp2;
+
+	dim=data.GetNrows();
+
+
 
 //	TODO: To be implemented in AverageDataParser and here...
 //	correlations;
@@ -25,6 +37,8 @@ blue::blue(string filename) {
 //	cov;
 //	inv;
 
+
+//----------------------------------
 //  python code of constructor...
 //	self.dataparser= AverageDataParser( filename )
 //	        self.errors= self.dataparser.getErrors()
@@ -54,6 +68,7 @@ TMatrixD blue::_columnVector(std::vector<float> stdvec){
 	for(int i=0; i<size; i++){
 		result(i,0)=stdvec[i];
 	}
+
 	return result;
 }
 
@@ -99,6 +114,6 @@ TMatrixD blue::calcPulls(){
 	TMatrixD delta=data - groupmatrix * calcAverage();
 
 	TMatrixD pulls=delta;
-	pulls/= totalerrors;   // weird: TMatrix knows '/=' but not '/'
+	pulls/= totalerrors;   // weird: TMatrix knows 'A/=B' but not 'A=C/B'
 	return pulls;
 }

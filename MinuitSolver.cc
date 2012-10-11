@@ -1,11 +1,12 @@
 #include "MinuitSolver.hh"
 #include <vector>
 #include <cmath>
+#include "TMath.h"
 
 minuitSolver::minuitSolver(fcn_t fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars):
   _minuit(new TMinuit(maxpars)),
-  _pars(pars),
   _ndf(ndf),
+  _pars(pars),
   _parerrors(parerrors),
   _parnames(parnames)
 {
@@ -70,15 +71,45 @@ minuitSolver::~minuitSolver()
     return corrmat;
   }
 
-// //   print
-//   void minuitSolver::printResult(TString option, bool cov, bool cor){
-//   }
-// 
-//   void minuitSolver::printCovariances(){
-//   }
-// 
-//   void minuitSolver::printCorrelations(){
-//   }
+//   print
+  void minuitSolver::printResult(bool cov, bool cor, TString option){
+    double chi2 = getChisq();
+    std::cout << "Minuit least squares\nResult after minuit fit:"  
+              << " Chi^2= " << chi2 
+              << " for " << _ndf << " d.o.f., "
+	      << " Chi^2/d.o.f= " << chi2/_ndf
+	      << " Estimated dist. to min: " <<  TMath::Prob(chi2, _ndf)
+              << std::endl;
+    std::cout << "\nFitted parameters and errors:\nName\tValue\tError" << std::endl;
+    printPars();
+    if(cov)
+      printCovariances();
+    if(cor)
+      printCovariances();
+  }
+
+  void minuitSolver::printPars(TString option)
+  {
+    std::vector<TString>::iterator it_names = _parnames.begin();
+    int iparameter = 0;
+    while(it_names != _parnames.end())
+    {
+      std::cout << *it_names << "\t" << 
+      getPars().first(iparameter) << "\t" << 
+      getPars().second(iparameter) << std::endl;
+      it_names++;
+      iparameter++;
+    }
+  }
+  void minuitSolver::printCovariances(){
+    TMatrixD matrix = getCovarianceMatrix();
+    matrix.Print();
+  }
+
+  void minuitSolver::printCorrelations(){
+    TMatrixD matrix = getCorrelationMatrix();
+    matrix.Print();
+  }
 
 
 void minuitSolver::solve(bool Blobel)
