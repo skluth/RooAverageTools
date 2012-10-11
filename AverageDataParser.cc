@@ -5,6 +5,7 @@
 #include <utility>
 #include <algorithm>
 #include <list>
+#include <math.h>
 
 
 using std::string;
@@ -80,11 +81,23 @@ void AverageDataParser::getErrorsAndOptions() {
   return;
 }
 
-std::vector<float> AverageDataParser::getTotalErrors() const {
+std::vector<float> AverageDataParser::getTotalErrors() {
+  std::map<string, std::vector<float> > errors = getErrors();
+  std::vector<float> totalerrorsq (getValues().size(), 0);
   std::vector<float> totalerrors;
-  totalerrors.push_back(3.1352830813181765);
-  totalerrors.push_back(4.6977547828723454);
-  totalerrors.push_back(5.3999999999999995);
+  unsigned int i = 0;
+  for(std::map<string, std::vector<float> >::const_iterator typeitr = errors.begin(); typeitr != errors.end(); ++typeitr) {
+    i = 0;
+    for(std::vector<float>::const_iterator valueitr = typeitr->second.begin(); valueitr != typeitr->second.end(); ++valueitr) {
+      float vsq = (*valueitr) * (*valueitr);
+      totalerrorsq[i++] += (*valueitr) * (*valueitr);
+    }
+  }
+  i = 0;
+  for(std::vector<float>::const_iterator totalerroritr = totalerrorsq.begin(); totalerroritr != totalerrorsq.end(); ++totalerroritr) {
+    totalerrors.push_back(sqrt(totalerrorsq[i]) );
+    ++i;
+  }
   return totalerrors;
 }
 

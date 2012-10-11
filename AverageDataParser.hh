@@ -28,7 +28,7 @@ public:
 
   void getErrorsAndOptions();
 
-  std::vector<float> getTotalErrors() const;
+  std::vector<float> getTotalErrors();
 
   std::map<string, string> getCovoption();
 
