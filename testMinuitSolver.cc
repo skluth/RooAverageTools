@@ -13,6 +13,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE minuitsolvertests
 #include <boost/test/unit_test.hpp>
+#include <boost/test/floating_point_comparison.hpp>
 
 // Namespaces:
 using std::string;
@@ -70,36 +71,67 @@ BOOST_FIXTURE_TEST_SUITE( minuitsolversuite, MinuitSolverTestFixture )
 // Test cases:
 
 BOOST_AUTO_TEST_CASE( test_solve ) {
+  BOOST_MESSAGE( "******** test_solve ********" );
+
   minsol->solve(true);
   int hstat = minsol->getStatus();
   BOOST_CHECK_MESSAGE( hstat== 3, "Something wrong with solve() status= " <<hstat);
+
+  BOOST_MESSAGE( "****************************" );
 }
-/*
+
 
 BOOST_AUTO_TEST_CASE( test_getChisq ) {
+  BOOST_MESSAGE( "******** test_getChisq ********" );
+
   minsol->solve(true);
   double chisq = minsol->getChisq();
   double expchisq = 3.58037721;
-  BOOST_CHECK_MESSAGE( abs(chisq-expchisq)/expchisq< 0.01, "Something wrong with getChisq() ");
+  BOOST_CHECK_CLOSE( chisq,expchisq,1e-7);
+
+  BOOST_MESSAGE( "****************************" );
 }
-*/
+
 BOOST_AUTO_TEST_CASE( test_getNdof ) {
+  BOOST_MESSAGE( "******** test_getNdof ********" );
+
   int tmp_ndof = minsol->getNdof();
   int exp_ndof = 2;
   BOOST_CHECK_MESSAGE( tmp_ndof== exp_ndof, "Something wrong with getNdof() ");
+
+  BOOST_MESSAGE( "****************************" );
 }
 
 BOOST_AUTO_TEST_CASE( test_getUpar ) {
+  BOOST_MESSAGE( "******** test_getUpar ********" );
+
   minsol->solve(true);
   TVectorD pars = minsol->getUpar();
   Double_t expectedpars[4]= { 167.1022776, -0.48923998, -1.13417736, -1.21202615 };
   TVectorD exp_pars(4,expectedpars);
-  /* 
-      for par, expectedpar in zip( pars, expectedpars ):
-            self.assertAlmostEqual( par, expectedpar, places=6 )
-  */     
-  BOOST_CHECK_MESSAGE( false, "Something wrong with solve() ");
+  for(int i=0; i<4; i++){
+	BOOST_CHECK_CLOSE( pars[i], exp_pars[i], 1e-6 );
+  }
+
+  BOOST_MESSAGE( "****************************" );
 }
+
+BOOST_AUTO_TEST_CASE( test_getUparErrors ) {
+  BOOST_MESSAGE( "******** test_getUparErrors ********" );
+
+  minsol->solve(true);
+  TVectorD parerrors = minsol->getUparErrors();
+  Double_t expectedparerrors[4]= { 1.4395944, 0.96551507, 0.78581713, 0.72292831 };
+  TVectorD exp_parerrors(4,expectedparerrors);
+  for(int i=0; i<4; i++){
+        BOOST_CHECK_CLOSE( parerrors[i], exp_parerrors[i], 1e-6 );
+  }
+
+  BOOST_MESSAGE( "****************************" );
+}
+
+
+
 // Test returning (dummy) average:
 /*BOOST_AUTO_TEST_CASE( testgetAverage ) {
   Double_t avg= minsol.getAverage();
