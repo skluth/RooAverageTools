@@ -26,7 +26,7 @@ private:
 
   std::pair<TVectorD, TVectorD> getPars();
   stat_t getStat();
-  void printPars(TVectorD pars, TVectorD parerrors, TVectorD parnames, TString option = ".4f");
+  void printPars(TString option = ".4f");
   
 public:
   minuitSolver(fcn_t fcn, TVectorD pars,  std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
@@ -42,7 +42,7 @@ public:
   double getChisq(){ return getStat().min; }
 
   //print
-  void printResult(TString option = ".4f", bool cov = false, bool cor = false);
+  void printResult(bool cov = false, bool cor = false, TString option = ".4f");
   void printCovariances();
   void printCorrelations();
 
