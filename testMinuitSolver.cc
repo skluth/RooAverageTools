@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE( test_getUpar ) {
   TVectorD pars = minsol->getUpar();
   Double_t expectedpars[4]= { 167.1022776, -0.48923998, -1.13417736, -1.21202615 };
   TVectorD exp_pars(4,expectedpars);
-  for(int i=0; i<4; i++){
+  for(int i=0; i<pars.GetNoElements(); i++){
 	BOOST_CHECK_CLOSE( pars[i], exp_pars[i], 1e-4 );
   	// precision point was set to 6 in python version 
   }
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE( test_getUparErrors ) {
   TVectorD parerrors = minsol->getUparErrors();
   Double_t expectedparerrors[4]= { 1.4395944, 0.96551507, 0.78581713, 0.72292831 };
   TVectorD exp_parerrors(4,expectedparerrors);
-  for(int i=0; i<4; i++){
+  for(int i=0; i<parerrors.GetNoElements(); i++){
         BOOST_CHECK_CLOSE( parerrors[i], exp_parerrors[i], 1e-4 );
         // precision point was set to 6 in python version 
   }
@@ -134,7 +134,45 @@ BOOST_AUTO_TEST_CASE( test_getUparErrors ) {
 }
 
 
+BOOST_AUTO_TEST_CASE( test_getCovarianceMatrix ) {
+  BOOST_MESSAGE( "******** test_CovarianceMatrix ********" );
 
+  minsol->solve(true);
+  TMatrixD cov_matrix = minsol->getCovarianceMatrix();
+  double exp_cov_matrix[4][4] ={
+	{2.0724326179335506, 0.51824661355716117, -0.5889555125183219, 0.74832061921642412},
+	{0.51824661355716117, 0.93221958901081603, -0.15033723965202533, -0.15772527200359948},
+	{-0.5889555125183219, -0.15033723965202533, 0.61750870113079592, -0.42340001172919944},
+	{0.74832061921642412, -0.15772527200359948, -0.42340001172919944, 0.52262549079771636}
+	}; 
+  for(int i=0; i<4; i++){
+     for(int j=0; j<4; j++){
+        BOOST_CHECK_CLOSE( cov_matrix[i][j], exp_cov_matrix[i][j], 1e-4 ); 
+     }
+  }
+
+  BOOST_MESSAGE( "****************************" );
+}
+
+BOOST_AUTO_TEST_CASE( test_getCorrelationMatrix ) {
+  BOOST_MESSAGE( "******** test_CorrelationMatrix ********" );
+
+  minsol->solve(true);
+  TMatrixD cor_matrix = minsol->getCorrelationMatrix();
+  double exp_cor_matrix[4][4] = {
+	{1.0000, 0.37285257870057764, -0.52061987169579238, 0.71903860509038131},
+	{0.37285257870057764, 1.0000, -0.19814627795415776, -0.22596796708443162},
+	{-0.52061987169579238, -0.19814627795415776, 1.0000, -0.74530499312239862},
+	{0.71903860509038131, -0.22596796708443162, -0.74530499312239862, 1.0000}
+	};
+  for(int i=0; i<4; i++){
+     for(int j=0; j<4; j++){
+        BOOST_CHECK_CLOSE( cor_matrix[i][j], exp_cor_matrix[i][j], 1e-4 );
+     }
+  }
+
+  BOOST_MESSAGE( "****************************" );
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
