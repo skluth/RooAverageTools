@@ -3,6 +3,7 @@
 #include "AverageDataParser.hh"
 #include <vector>
 #include <utility>
+#include <algorithm>
 #include <list>
 
 
@@ -50,12 +51,16 @@ void AverageDataParser::getErrorsAndOptions() {
   std::map<string, std::vector<float> > & errors = *m_errors;
   std::map<string, string> & covopts = *m_covopts;
 
+  std::vector<string> names = reader.getNames("Data");
+
   std::list<std::pair<string, string> > elementNames;
-  elementNames.push_back( std::pair<string, string>("00Stat", "00stat") );
-  elementNames.push_back( std::pair<string, string>("01Err1", "01err1") );
-  elementNames.push_back( std::pair<string, string>("02Err2", "02err2") );
-  elementNames.push_back( std::pair<string, string>("03Err3", "03err3") );
-  elementNames.push_back( std::pair<string, string>("04Err4", "04err4") );
+  for(std::vector<string>::const_iterator itr = names.begin(); itr != names.end(); ++itr) {
+    string name = *itr;
+    std::transform(name.begin(), name.end(), name.begin(),  ::tolower);
+    if (name != "names" && name != "values") {
+      elementNames.push_back( std::pair<string, string>(*itr, name) );
+    }
+  }
 
   for(std::list<std::pair<string, string> >::const_iterator nameitr = elementNames.begin(); nameitr != elementNames.end(); ++nameitr) {
     string elementstring = reader.get( "Data", nameitr->first, "" );
