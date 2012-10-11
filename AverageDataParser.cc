@@ -89,7 +89,6 @@ std::vector<float> AverageDataParser::getTotalErrors() {
   for(std::map<string, std::vector<float> >::const_iterator typeitr = errors.begin(); typeitr != errors.end(); ++typeitr) {
     i = 0;
     for(std::vector<float>::const_iterator valueitr = typeitr->second.begin(); valueitr != typeitr->second.end(); ++valueitr) {
-      float vsq = (*valueitr) * (*valueitr);
       totalerrorsq[i++] += (*valueitr) * (*valueitr);
     }
   }
