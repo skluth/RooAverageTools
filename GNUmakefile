@@ -2,7 +2,6 @@
 # GNU makefile for RooAverageTools
 # S. Kluth 9/2012
 
-CXX = gcc-4.7
 LD = $(CXX)
 CXXFLAGS = -Wall -fPIC
 
@@ -15,7 +14,7 @@ DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
 PROJECTPATH = $(shell echo $${PWD%/*} )
 CPPFLAGS = -I $(PROJECTPATH)/INIParser
 LDFLAGS = -L $(PROJECTPATH)/INIParser
-LDLIBS = -lINIParser -lMatrix -lMinuit
+LDLIBS = -lINIParser -lMatrix -lMinuit -lCore
 ifdef HEPROOT
 CPPFLAGS += -I $(HEPROOT)/include -I $(HEPROOT)/include/boost-1_46/
 LDFLAGS += -L $(HEPROOT)/lib64
