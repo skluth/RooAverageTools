@@ -2,12 +2,13 @@
 # GNU makefile for RooAverageTools
 # S. Kluth 9/2012
 
+CXX = gcc-4.7
 LD = $(CXX)
 CXXFLAGS = -Wall -fPIC
 
-LIBFILES = AverageDataParser.cc ClsqAverage.cc MinuitSolver.cc blue.cc
+LIBFILES = AverageDataParser.cc ClsqAverage.cc blue.cc minuitSolver.cc
 LIB = libRooAverageTools.so
-TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc
+TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc testminuitSolver.cc
 TESTEXE = $(basename $(TESTFILE) )
 LIBOBJS = $(LIBFILES:.cc=.o)
 DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
@@ -16,9 +17,9 @@ CPPFLAGS = -I $(PROJECTPATH)/INIParser
 LDFLAGS = -L $(PROJECTPATH)/INIParser
 LDLIBS = -lINIParser -lMatrix -lMinuit
 ifdef HEPROOT
-CPPFLAGS += -I $(HEPROOT)/include -I $(HEPROOT)/include/boost-1_48/
+CPPFLAGS += -I $(HEPROOT)/include -I $(HEPROOT)/include/boost-1_46/
 LDFLAGS += -L $(HEPROOT)/lib64
-LDLIBS += -lboost_unit_test_framework-gcc46-mt-1_48
+LDLIBS += -lboost_unit_test_framework-gcc46-mt-1_46
 else
 CPPFLAGS += -I $(ROOTSYS)/include
 LDFLAGS += -L $(ROOTSYS)/lib 
