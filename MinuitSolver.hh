@@ -3,6 +3,18 @@
 #include "TVectorD.h"
 #include "TMinuit.h"
 #include "TString.h"
+
+typedef void (* fcn_t)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t);
+
+struct stat_t {
+  Double_t min;
+  Double_t edm;
+  Double_t errdef;
+  Int_t npari;
+  Int_t nparx;
+  Int_t status;
+};	
+
 class minuitSolver {
 
 private:
@@ -12,30 +24,29 @@ private:
   TVectorD _parerrors;
   std::vector<TString> _parnames;
 
-  void getPars(TVectorD &pars, TVectorD &parerrors);
-  double getStat();
-  void printPars(TVectorD pars, TVectorD parerrors, TVectorD parnames, TString option = ".4f");
-
+  std::pair<TVectorD, TVectorD> getPars();
+  stat_t getStat();
+  void printPars(TString option = ".4f");
+  
 public:
-  //  minuitSolver();
-  minuitSolver(void *fcn, TVectorD pars, std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
-  //minuitSolver(void (*)(Int_t&, Double_t*, Double_t&f, Double_t*, Int_t) fcn, TVectorD pars, TVectorD parerrors, int ndf, int maxpars = 50);
+  minuitSolver(fcn_t fcn, TVectorD pars,  std::vector<TString> parnames, TVectorD parerrors, int ndf, int maxpars = 50);
   ~minuitSolver();
   //getter
-  TVectorD getUpar();
-  TVectorD getUparErrors();
-  TVectorD getUparNames();
+  int getNdof() { return _ndf;}
+  TVectorD getUpar() { return getPars().first; }
+  TVectorD getUparErrors() { return getPars().second; }
+  std::vector<TString> getUparNames() { return _parnames; }
   TMatrixD getCovarianceMatrix();
   TMatrixD getCorrelationMatrix();
-  double getChisq();
+  int getStatus(){ return getStat().status; }
+  double getChisq(){ return getStat().min; }
 
   //print
-  void printResult(TString option = ".4f", bool cov = false, bool cor = false);
+  void printResult(bool cov = false, bool cor = false, TString option = ".4f");
   void printCovariances();
   void printCorrelations();
 
   //other
-  void minuitCommand(TString command);
   void solve(bool Blobel);
   
 };
