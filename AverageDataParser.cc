@@ -126,6 +126,18 @@ map<string,string> AverageDataParser::getCorrelations() const {
 
 map<string, TMatrixD> AverageDataParser::getCovariances() const {
   map<string, TMatrixD> covariances;
+  double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
+  TMatrixD myMatrix1(3,3,matrixData1);
+  covariances["00stat"] = myMatrix1;
+  double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
+  TMatrixD myMatrix2(3,3,matrixData2);
+  covariances["01erra"] = myMatrix2;
+  double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
+  TMatrixD myMatrix3(3,3,matrixData3);
+  covariances["02errb"] = myMatrix3;
+  double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
+  TMatrixD myMatrix4(3,3,matrixData4);
+  covariances["03errc"] = myMatrix4;
   return covariances;
 }
 

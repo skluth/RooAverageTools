@@ -246,34 +246,34 @@ BOOST_AUTO_TEST_CASE( testErrors ) {
 }
 
 BOOST_AUTO_TEST_CASE( testCovariances ) {
-  std::map<string,TMatrixD*> covariances, expectedCovariances;
-  //covariances = parser.getCovariances()
+  std::map<string,TMatrixD> expectedCovariances;
+  std::map<string,TMatrixD> covariances = parser.getCovariances();
   double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
   TMatrixD myMatrix1(3,3,matrixData1);
-  expectedCovariances["00stat"] = &myMatrix1;
+  expectedCovariances["00stat"] = myMatrix1;
   double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
   TMatrixD myMatrix2(3,3,matrixData2);
-  expectedCovariances["01erra"] = &myMatrix2;
+  expectedCovariances["01erra"] = myMatrix2;
   double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
   TMatrixD myMatrix3(3,3,matrixData3);
-  expectedCovariances["02errb"] = &myMatrix3;
+  expectedCovariances["02errb"] = myMatrix3;
   double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
   TMatrixD myMatrix4(3,3,matrixData4);
-  expectedCovariances["03errc"] = &myMatrix4;
+  expectedCovariances["03errc"] = myMatrix4;
   
   bool equalEntries = (covariances.size() == expectedCovariances.size() );
   BOOST_CHECK_MESSAGE(equalEntries, "Covariances and expectedCovariances have different size");
   if (equalEntries) { //iterate over entries and check they are the same
-    std::map<string, TMatrixD* >::const_iterator expecteditr = expectedCovariances.begin();
-    for(std::map<string, TMatrixD* >::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
+    std::map<string, TMatrixD >::const_iterator expecteditr = expectedCovariances.begin();
+    for(std::map<string, TMatrixD >::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
       BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
-      double* serialisedMatrix = (itr->second)->GetMatrixArray();
-      double* serialisedExpectedMatrix = (expecteditr->second)->GetMatrixArray();
-      int matrixSize = (itr->second)->GetNoElements();
-      int expectedMatrixSize = (expecteditr->second)->GetNoElements();
+      const double* serialisedMatrix = (itr->second).GetMatrixArray();
+      const double* serialisedExpectedMatrix = (expecteditr->second).GetMatrixArray();
+      int matrixSize = (itr->second).GetNoElements();
+      int expectedMatrixSize = (expecteditr->second).GetNoElements();
       BOOST_CHECK_EQUAL(matrixSize, expectedMatrixSize);
-      int matrixNcols = (itr->second)->GetNcols();
-      int expectedMatrixNcols = (expecteditr->second)->GetNcols();
+      int matrixNcols = (itr->second).GetNcols();
+      int expectedMatrixNcols = (expecteditr->second).GetNcols();
       BOOST_CHECK_EQUAL( matrixNcols, expectedMatrixNcols);
       for (int i=0; i<matrixSize; i++)
 	{
