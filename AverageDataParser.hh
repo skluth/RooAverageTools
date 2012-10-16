@@ -1,7 +1,6 @@
 #ifndef AVERAGEDATAPARSER_HH
 #define AVERAGEDATAPARSER_HH
 
-
 #include "INIReader.hh"
 
 #include <string>
@@ -10,7 +9,7 @@
 #include "TObject.h"
 #include "TMatrixD.h"
 
-using std::string;
+//using std::string;
 
 class AverageDataParser {
 
@@ -22,25 +21,25 @@ public:
 
   std::vector<float> getValues() const;
 
-  std::vector<string> getNames() const;
+  std::vector<std::string> getNames() const;
 
-  std::map<string, std::vector<float> > getErrors();
+  std::map<std::string, std::vector<float> > getErrors();
 
   void getErrorsAndOptions();
 
   std::vector<float> getTotalErrors();
 
-  std::map<string, string> getCovoption();
+  std::map<std::string, std::string> getCovoption();
 
-  std::map<string, string> getCorrelations() const;
+  std::map<std::string, std::string> getCorrelations() const;
 
-  std::map<string, TMatrixD> getCovariances() const;
+  std::map<std::string, TMatrixD> getCovariances() const;
 
   std::map<unsigned int, std::vector<float> > getSysterrorMatrix() const;
 
 private:
-  std::map<string, std::vector<float> > * m_errors;
-  std::map<string, string> * m_covopts;
+  std::map<std::string, std::vector<float> > m_errors;
+  std::map<std::string, std::string> m_covopts;
 
   std::string filename;
   INIParser::INIReader reader;

@@ -9,123 +9,122 @@
 
 
 using std::string;
+using std::vector;
+using std::map;
 using namespace INIParser;
 
 
 AverageDataParser::AverageDataParser( const string& fname ) :
-  m_errors( 0 ), m_covopts( 0 ), filename( fname ), reader( fname ) {}
-
+  filename( fname ), reader( fname ) {
+  getErrorsAndOptions();
+}
 
 string AverageDataParser::getFilename() const {
   return filename;
 }
 
-std::vector<float> AverageDataParser::getValues() const {
-  string valuestring = reader.get( "Data", "Values", "" );
-  std::vector<string> valuestrings = INIParser::getTokens(valuestring);
-  std::vector<float> values;
-  for(std::vector<string>::const_iterator valueitr = valuestrings.begin(); valueitr != valuestrings.end(); ++valueitr){
-    std::istringstream ss(*valueitr);
+vector<float> AverageDataParser::getValues() const {
+  string valuestring= reader.get( "Data", "Values", "" );
+  vector<string> valuestrings= INIParser::getTokens( valuestring );
+  vector<float> values;
+  for( vector<string>::const_iterator valueitr= valuestrings.begin(); 
+       valueitr != valuestrings.end(); ++valueitr ) {
+    std::istringstream iss( *valueitr );
     float value;
-    ss >> value;
+    iss >> value;
     values.push_back( value );
   }
   return values;
 }
 
-std::vector<string> AverageDataParser::getNames() const {
-  string namestring = reader.get( "Data", "Names", "" );
-  std::vector<string> names = INIParser::getTokens(namestring);
+vector<string> AverageDataParser::getNames() const {
+  string namestring= reader.get( "Data", "Names", "" );
+  vector<string> names= INIParser::getTokens( namestring );
   return names;
 }
 
-std::map<string, std::vector<float> > AverageDataParser::getErrors() {
-  if (!m_errors) {
-    getErrorsAndOptions();
-  }
-  return *m_errors;
+map<string, vector<float> > AverageDataParser::getErrors() {
+  return m_errors;
+}
+
+map<string, string> AverageDataParser::getCovoption() {
+  return m_covopts;
 }
 
 void AverageDataParser::getErrorsAndOptions() {
-  m_errors = new std::map<string, std::vector<float> >;
-  m_covopts = new std::map<string, string>;
-  std::map<string, std::vector<float> > & errors = *m_errors;
-  std::map<string, string> & covopts = *m_covopts;
-
-  std::vector<string> names = reader.getNames("Data");
-
-  std::list<std::pair<string, string> > elementNames;
-  for(std::vector<string>::const_iterator itr = names.begin(); itr != names.end(); ++itr) {
-    string name = *itr;
-    std::transform(name.begin(), name.end(), name.begin(),  ::tolower);
-    if (name != "names" && name != "values") {
-      elementNames.push_back( std::pair<string, string>(*itr, name) );
-    }
+  vector<string> keys= reader.getNames( "Data" );
+  vector<string> removekeys;
+  removekeys.push_back( "Names" );
+  removekeys.push_back( "Values" );
+  for( size_t ikey= 0; ikey != removekeys.size(); ikey++ ) {
+    vector<string>::iterator pos= std::find( keys.begin(),
+					     keys.end(),
+					     removekeys[ikey] );
+    if( pos != keys.end() ) keys.erase( pos );
   }
-
-  for(std::list<std::pair<string, string> >::const_iterator nameitr = elementNames.begin(); nameitr != elementNames.end(); ++nameitr) {
-    string elementstring = reader.get( "Data", nameitr->first, "" );
-    std::vector<string> elementstrings = INIParser::getTokens(elementstring);
-    covopts[nameitr->second] = elementstrings.back();
-    elementstrings.pop_back();
-
-    std::vector<float> elements;
-    for(std::vector<string>::const_iterator elementitr = elementstrings.begin(); elementitr != elementstrings.end(); ++elementitr){
-      std::istringstream ss(*elementitr);
-      float element;
-      ss >> element;
+  for( size_t ikey= 0; ikey != keys.size(); ikey++ ) {
+    string key= keys[ikey];
+    string elementstring= reader.get( "Data", key, "" );
+    vector<string> elementtokens= INIParser::getTokens( elementstring );
+    m_covopts[key]= elementtokens.back();
+    elementtokens.pop_back();
+    vector<float> elements;
+    for( size_t itok= 0; itok != elementtokens.size(); itok++ ) {
+      float element= INIParser::stringToType( elementtokens[itok], 0.0 );      
       elements.push_back( element );
     }
-    errors[nameitr->second] = elements;
+    m_errors[key]= elements;
   }
   return;
 }
 
-std::vector<float> AverageDataParser::getTotalErrors() {
-  std::map<string, std::vector<float> > errors = getErrors();
-  std::vector<float> totalerrorsq (getValues().size(), 0);
-  std::vector<float> totalerrors;
-  unsigned int i = 0;
-  for(std::map<string, std::vector<float> >::const_iterator typeitr = errors.begin(); typeitr != errors.end(); ++typeitr) {
-    i = 0;
-    for(std::vector<float>::const_iterator valueitr = typeitr->second.begin(); valueitr != typeitr->second.end(); ++valueitr) {
-      totalerrorsq[i++] += (*valueitr) * (*valueitr);
+vector<float> AverageDataParser::getTotalErrors() {
+  vector<float> totalerrors( getValues().size(), 0.0 );
+  for( map<string, vector<float> >::const_iterator typeitr= m_errors.begin(); 
+       typeitr != m_errors.end(); ++typeitr ) {
+    vector<float> errors= typeitr->second;
+    for( size_t ierr= 0; ierr < errors.size(); ierr++ ) {
+      totalerrors[ierr]+= errors[ierr]*errors[ierr];
     }
   }
-  i = 0;
-  for(std::vector<float>::const_iterator totalerroritr = totalerrorsq.begin(); totalerroritr != totalerrorsq.end(); ++totalerroritr) {
-    totalerrors.push_back(sqrt(totalerrorsq[i]) );
-    ++i;
+  for( size_t ierr= 0; ierr < totalerrors.size(); ierr++ ) {
+    totalerrors[ierr]= sqrt( totalerrors[ierr] );
   }
   return totalerrors;
 }
 
-std::map<string, string> AverageDataParser::getCovoption() {
-  if(!m_covopts) {
-    getErrorsAndOptions();
+map<string,string> AverageDataParser::getCorrelations() const {
+  map<string,string> covariancesmap;
+  for( map<string, string>::const_iterator itr= m_covopts.begin();
+       itr != m_covopts.end(); itr++ ) {
+    string key= itr->first;
+    string covopt= itr->second;
+    if( covopt.find( "c" ) != string::npos or 
+	covopt.find( "m" ) != string::npos ) {
+      string covariancesstring= reader.get( "Covariances", key, "" );
+      vector<string> covariancestokens= 
+	INIParser::getTokens( covariancesstring );
+      string str;
+      size_t ntok= covariancestokens.size();
+      for( size_t itok= 0; itok < ntok; itok++ ) {
+	str+= covariancestokens[itok];
+	if( itok < ntok-1 ) str+= " ";
+      }
+      covariancesmap[key]= str;
+    }
   }
-  return *m_covopts;
+  return covariancesmap;
 }
 
-std::map<string, string> AverageDataParser::getCorrelations() const {
-  std::map<string, string> correlations;
-  string tmp = "1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0";
-  correlations["00stat"] = tmp;
-  tmp = "p, p, p, p, p, p, p, p, p";
-  correlations["01err1"] = tmp;
-  tmp = "f, f, f, f, f, f, f, f, f";
-  correlations["02err2"] = tmp;
-  return correlations;
-}
-
-std::map<string, TMatrixD> AverageDataParser::getCovariances() const {
-  std::map<string, TMatrixD> covariances;
+map<string, TMatrixD> AverageDataParser::getCovariances() const {
+  map<string, TMatrixD> covariances;
   return covariances;
 }
 
-std::map<unsigned int, std::vector<float> > AverageDataParser::getSysterrorMatrix() const {
-  std::map<unsigned int, std::vector<float> > systerrmatrix;
-  std::vector<float> tmp;
+map<unsigned int, vector<float> > 
+AverageDataParser::getSysterrorMatrix() const {
+  map<unsigned int, vector<float> > systerrmatrix;
+  vector<float> tmp;
   tmp.push_back(1.8865);
   tmp.push_back(1.8865);
   tmp.push_back(1.8865);
