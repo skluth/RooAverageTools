@@ -6,10 +6,12 @@
 #include <string>
 #include <vector>
 
-#include "TObject.h"
-#include "TMatrixD.h"
+#include <TObject.h>
+#include <TMatrixD.h>
+#include <boost/smart_ptr.hpp>
 
-//using std::string;
+// TypeDefs
+typedef boost::shared_ptr<TMatrixD> TMatrixD_Ptr;
 
 class AverageDataParser {
 
@@ -33,7 +35,7 @@ public:
 
   std::map<std::string, std::string> getCorrelations() const;
 
-  std::map<std::string, TMatrixD> getCovariances() const;
+  std::map<std::string, TMatrixD_Ptr> getCovariances() const;
 
   std::map<unsigned int, std::vector<float> > getSysterrorMatrix() const;
 
