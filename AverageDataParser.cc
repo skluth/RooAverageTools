@@ -66,12 +66,20 @@ void AverageDataParser::getErrorsAndOptions() {
     string key= keys[ikey];
     string elementstring= reader.get( "Data", key, "" );
     vector<string> elementtokens= INIParser::getTokens( elementstring );
-    m_covopts[key]= elementtokens.back();
+    string covopt = elementtokens.back();
+    m_covopts[key] = covopt;
+
     elementtokens.pop_back();
     vector<float> elements;
     for( size_t itok= 0; itok != elementtokens.size(); itok++ ) {
       float element= INIParser::stringToType( elementtokens[itok], 0.0 );      
       elements.push_back( element );
+    }
+    if(covopt.find( "%" ) != string::npos) {
+      vector<float> values = getValues();
+      for(size_t index = 0; index != elements.size(); index++ ) {
+        elements[index] *= values[index] / 100.0;
+      }
     }
     m_errors[key]= elements;
   }
