@@ -74,29 +74,29 @@ public:
 
 
 
-	std::map<string, std::vector<float> > errors;
-	std::vector<string> names;
-	std::map<string, string > covopts;
-	std::map<string, std::vector<float> > correlations;
-	std::map<string, TMatrixD > hcov;
-	TMatrixD cov;
-	TMatrixDSym inv;
-	TMatrixD groupmatrix;
-	TMatrixD data;
-	TMatrixD totalerrors;
+  std::map<std::string, std::vector<float> > errors;
+  std::vector<std::string> names;
+  std::map<std::string, std::string > covopts;
+  std::map<std::string, std::vector<float> > correlations;
+  std::map<std::string, TMatrixD > hcov;
+  TMatrixD cov;
+  TMatrixDSym inv;
+  TMatrixD groupmatrix;
+  TMatrixD data;
+  TMatrixD totalerrors;
+  
 
-
-	int dim;  // max number of rows/columns
+  int dim;  // max number of rows/columns
 public:
-	blue(string filename);
-	virtual ~blue();
-	TMatrixD _columnVector(std::vector<float> stdvec);
-
-	TMatrixD  calcWeightsMatrix();
-	double calcAverage();
-	double calcChisq();
-	TMatrixD calcPulls();
-	void printInputs();
+  blue(std::string filename);
+  virtual ~blue();
+  TMatrixD _columnVector(std::vector<float> stdvec);
+  
+  TMatrixD  calcWeightsMatrix();
+  double calcAverage();
+  double calcChisq();
+  TMatrixD calcPulls();
+  void printInputs();
 
 	    //# Print the input data:
 	    //printInputs( self, cov=False  ):

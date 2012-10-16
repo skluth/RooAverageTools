@@ -8,7 +8,7 @@
 #include "blue.hh"
 #include <iostream>
 
-
+using std::string;
 
 blue::blue(string filename) {
 	AverageDataParser dataparser(filename);
