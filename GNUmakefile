@@ -2,7 +2,7 @@
 # GNU makefile for RooAverageTools
 # S. Kluth 9/2012
 
-CXX = gcc-4.7
+CXX = g++
 LD = $(CXX)
 CXXFLAGS = -Wall -fPIC
 
