@@ -2,6 +2,10 @@
 
 #include "AverageDataParser.hh"
 #include <vector>
+#include <utility>
+#include <algorithm>
+#include <list>
+#include <math.h>
 
 
 using std::string;
@@ -9,7 +13,7 @@ using namespace INIParser;
 
 
 AverageDataParser::AverageDataParser( const string& fname ) :
-  filename( fname ), reader( fname ) {}
+  m_errors( 0 ), m_covopts( 0 ), filename( fname ), reader( fname ) {}
 
 
 string AverageDataParser::getFilename() const {
@@ -17,66 +21,124 @@ string AverageDataParser::getFilename() const {
 }
 
 std::vector<float> AverageDataParser::getValues() const {
+  string valuestring = reader.get( "Data", "Values", "" );
+  std::vector<string> valuestrings = INIParser::getTokens(valuestring);
   std::vector<float> values;
-  values.push_back(171.5);
-  values.push_back(173.1);
-  values.push_back(174.5);
+  for(std::vector<string>::const_iterator valueitr = valuestrings.begin(); valueitr != valuestrings.end(); ++valueitr){
+    std::istringstream ss(*valueitr);
+    float value;
+    ss >> value;
+    values.push_back( value );
+  }
   return values;
 }
 
 std::vector<string> AverageDataParser::getNames() const {
-  std::vector<string> names;
-  names.push_back("Val1");
-  names.push_back("Val2");
-  names.push_back("Val3");
+  string namestring = reader.get( "Data", "Names", "" );
+  std::vector<string> names = INIParser::getTokens(namestring);
   return names;
 }
 
-std::map<string, std::vector<float> > AverageDataParser::getErrors() const {
-  std::map<string, std::vector<float> > errors;
-  std::vector<float> tmp;
-  tmp.push_back(0.3);
-  tmp.push_back(0.33);
-  tmp.push_back(0.4);
-  errors["00stat"] = tmp;
-  tmp.clear();
-  tmp.push_back(1.1);
-  tmp.push_back(1.3);
-  tmp.push_back(1.5);
-  errors["01err1"] = tmp;
-  tmp.clear();
-  tmp.push_back(0.9);
-  tmp.push_back(1.5);
-  tmp.push_back(1.9);
-  errors["02err2"] = tmp;
-  tmp.clear();
-  tmp.push_back(2.4);
-  tmp.push_back(3.1);
-  tmp.push_back(3.5);
-  errors["03err3"] = tmp;
-  tmp.clear();
-  tmp.push_back(1.4);
-  tmp.push_back(2.9);
-  tmp.push_back(3.3);
-  errors["04err4"] = tmp;
-  tmp.clear();
-  return errors;
+std::map<string, std::vector<float> > AverageDataParser::getErrors() {
+  if (!m_errors) {
+    getErrorsAndOptions();
+  }
+  return *m_errors;
 }
 
-std::vector<float> AverageDataParser::getTotalErrors() const {
+void AverageDataParser::getErrorsAndOptions() {
+  m_errors = new std::map<string, std::vector<float> >;
+  m_covopts = new std::map<string, string>;
+  std::map<string, std::vector<float> > & errors = *m_errors;
+  std::map<string, string> & covopts = *m_covopts;
+
+  std::vector<string> names = reader.getNames("Data");
+
+  std::list<std::pair<string, string> > elementNames;
+  for(std::vector<string>::const_iterator itr = names.begin(); itr != names.end(); ++itr) {
+    string name = *itr;
+    std::transform(name.begin(), name.end(), name.begin(),  ::tolower);
+    if (name != "names" && name != "values") {
+      elementNames.push_back( std::pair<string, string>(*itr, name) );
+    }
+  }
+
+  for(std::list<std::pair<string, string> >::const_iterator nameitr = elementNames.begin(); nameitr != elementNames.end(); ++nameitr) {
+    string elementstring = reader.get( "Data", nameitr->first, "" );
+    std::vector<string> elementstrings = INIParser::getTokens(elementstring);
+    covopts[nameitr->second] = elementstrings.back();
+    elementstrings.pop_back();
+
+    std::vector<float> elements;
+    for(std::vector<string>::const_iterator elementitr = elementstrings.begin(); elementitr != elementstrings.end(); ++elementitr){
+      std::istringstream ss(*elementitr);
+      float element;
+      ss >> element;
+      elements.push_back( element );
+    }
+    errors[nameitr->second] = elements;
+  }
+  return;
+}
+
+std::vector<float> AverageDataParser::getTotalErrors() {
+  std::map<string, std::vector<float> > errors = getErrors();
+  std::vector<float> totalerrorsq (getValues().size(), 0);
   std::vector<float> totalerrors;
-  totalerrors.push_back(3.1352830813181765);
-  totalerrors.push_back(4.6977547828723454);
-  totalerrors.push_back(5.3999999999999995);
+  unsigned int i = 0;
+  for(std::map<string, std::vector<float> >::const_iterator typeitr = errors.begin(); typeitr != errors.end(); ++typeitr) {
+    i = 0;
+    for(std::vector<float>::const_iterator valueitr = typeitr->second.begin(); valueitr != typeitr->second.end(); ++valueitr) {
+      totalerrorsq[i++] += (*valueitr) * (*valueitr);
+    }
+  }
+  i = 0;
+  for(std::vector<float>::const_iterator totalerroritr = totalerrorsq.begin(); totalerroritr != totalerrorsq.end(); ++totalerroritr) {
+    totalerrors.push_back(sqrt(totalerrorsq[i]) );
+    ++i;
+  }
   return totalerrors;
 }
 
-std::map<string, string> AverageDataParser::getCovoption() const {
-  std::map<string, string> covopts;
-  covopts["00stat"] = string("c"); 
-  covopts["01err1"] = string("m");
-  covopts["02err2"] = string("m");
-  covopts["03err3"] = string("p");
-  covopts["04err4"] = string("f");
-  return covopts;
+std::map<string, string> AverageDataParser::getCovoption() {
+  if(!m_covopts) {
+    getErrorsAndOptions();
+  }
+  return *m_covopts;
+}
+
+std::map<string, string> AverageDataParser::getCorrelations() const {
+  std::map<string, string> correlations;
+  string tmp = "1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0";
+  correlations["00stat"] = tmp;
+  tmp = "p, p, p, p, p, p, p, p, p";
+  correlations["01err1"] = tmp;
+  tmp = "f, f, f, f, f, f, f, f, f";
+  correlations["02err2"] = tmp;
+  return correlations;
+}
+
+std::map<string, TMatrixD> AverageDataParser::getCovariances() const {
+  std::map<string, TMatrixD> covariances;
+  return covariances;
+}
+
+std::map<unsigned int, std::vector<float> > AverageDataParser::getSysterrorMatrix() const {
+  std::map<unsigned int, std::vector<float> > systerrmatrix;
+  std::vector<float> tmp;
+  tmp.push_back(1.8865);
+  tmp.push_back(1.8865);
+  tmp.push_back(1.8865);
+  systerrmatrix[1] = tmp;
+  tmp.clear();
+  tmp.push_back(0.9);
+  tmp.push_back(0.9);
+  tmp.push_back(0.9);
+  systerrmatrix[2] = tmp;
+  tmp.clear();
+  tmp.push_back(2.4);
+  tmp.push_back(2.42239067);
+  tmp.push_back(2.4419825);
+  systerrmatrix[3] = tmp;
+  return systerrmatrix;
 }
