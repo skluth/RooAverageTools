@@ -82,19 +82,18 @@ void AverageDataParser::getErrorsAndOptions() {
     string key= keys[ikey];
     string elementstring= reader.get( "Data", key, "" );
     vector<string> elementtokens= INIParser::getTokens( elementstring );
-    string covopt = elementtokens.back();
-    m_covopts[key] = covopt;
-
+    string covopt= elementtokens.back();
+    m_covopts[key]= covopt;
     elementtokens.pop_back();
     vector<float> elements;
     for( size_t itok= 0; itok != elementtokens.size(); itok++ ) {
       float element= INIParser::stringToType( elementtokens[itok], 0.0 );      
       elements.push_back( element );
     }
-    if(covopt.find( "%" ) != string::npos) {
-      vector<float> values = getValues();
-      for(size_t index = 0; index != elements.size(); index++ ) {
-        elements[index] *= values[index] / 100.0;
+    if( covopt.find( "%" ) != string::npos ) {
+      vector<float> values= getValues();
+      for( size_t ival= 0; ival != elements.size(); ival++ ) {
+        elements[ival]*= values[ival] / 100.0;
       }
     }
     m_errors[key]= elements;
@@ -144,6 +143,38 @@ map<string,string> AverageDataParser::getCorrelations() const {
   return covariancesmap;
 }
 
+Double_t AverageDataParser::calcCovariance( string covopt, 
+					    vector<float> errors, 
+					    size_t ierr, size_t jerr ) const {
+  Double_t cov= 0.0;
+  if( covopt.find( "u" ) != string::npos ) {
+    if( ierr == jerr ) cov= errors[ierr]*errors[ierr];
+  }
+  return cov;
+}
+
+map<string, TMatrixD> AverageDataParser::makeCovariances() const {
+  map<string, TMatrixD> covariances;
+  for( map<string,vector<float> >::const_iterator mapitr= m_errors.begin();
+       mapitr != m_errors.end(); mapitr++ ) {
+    string errorkey= mapitr->first;
+    vector<float> errors= mapitr->second;
+    size_t nerr= errors.size();
+    string covopt= m_covopts.find( errorkey )->second;
+    TMatrixD covm( nerr, nerr );
+    if( covopt.find( "u" ) != string::npos ) {
+      for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	  covm(ierr,jerr)= calcCovariance( covopt, errors, ierr, jerr );
+	}
+      }
+      covariances.insert( map<string, TMatrixD>::value_type( errorkey,
+							     covm ) );
+    }
+  }
+  return covariances;
+}
+  
 
 // Calculate covariances from covariance options or detailed
 // correlation options in map:

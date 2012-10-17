@@ -221,9 +221,38 @@ BOOST_AUTO_TEST_CASE( testErrors ) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
+  map<string,TMatrixD> expectedCovariances;
+  double matrixData1[]= { 0.117649, 0.0, 0.0,  0.0, 0.14502387, 
+			  0.0, 0.0,  0.0,  0.27405225 };
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "00stat", 
+								TMatrixD( 3, 3, 
+									  matrixData1 ) ) );
+  map<string,TMatrixD> covariances= parser.makeCovariances();
+  BOOST_CHECK_EQUAL( covariances.size(), expectedCovariances.size() );
+  for( map<string,TMatrixD>::const_iterator itr= covariances.begin(),
+	 expitr= expectedCovariances.begin();
+       itr != covariances.end(); itr++, expitr++ ) {
+    string errorkey= itr->first;
+    string expectederrorkey= expitr->first;
+    BOOST_CHECK_EQUAL( errorkey, expectederrorkey );
+    TMatrixD covm= itr->second;
+    TMatrixD expectedcovm= expitr->second;
+    Int_t nerr= covm.GetNrows();
+    BOOST_CHECK_EQUAL( nerr, expectedcovm.GetNrows() );
+    for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
+      for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
+	BOOST_CHECK_CLOSE( covm(ierr,jerr), expectedcovm(ierr,jerr), 1.0e-4 );
+      }
+    }
+  }
+}
+
+
 BOOST_AUTO_TEST_CASE( testCovariances ) {
-  std::map<string,TMatrixD_Ptr> expectedCovariances;
-  std::map<string,TMatrixD_Ptr> covariances = parser.getCovariances();
+  map<string,TMatrixD_Ptr> expectedCovariances;
+  map<string,TMatrixD_Ptr> covariances = parser.getCovariances();
   double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
   expectedCovariances["00stat"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData1));
   double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};

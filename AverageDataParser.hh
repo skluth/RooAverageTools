@@ -37,6 +37,10 @@ public:
 
   std::map<std::string, TMatrixD_Ptr> getCovariances() const;
 
+  std::map<std::string, TMatrixD> makeCovariances() const;
+  Double_t calcCovariance( std::string covopt, 
+			   std::vector<float> errors, 
+			   size_t ierr, size_t jerr ) const;
   std::map<unsigned int, std::vector<float> > getSysterrorMatrix() const;
 
 private:
