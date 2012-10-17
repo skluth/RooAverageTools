@@ -6,10 +6,6 @@
 #include <algorithm>
 #include <list>
 #include <math.h>
-#include <boost/smart_ptr.hpp>
-
-// TypeDefs
-typedef boost::shared_ptr<TMatrixD> TMatrixD_Ptr;
 
 // Commonly used identifiers
 using std::string;
@@ -175,21 +171,18 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
   return covariances;
 }
   
-
 // Calculate covariances from covariance options or detailed
 // correlation options in map:
-//map<string, TMatrixD> AverageDataParser::getCovariances() const {
-//  map<string, TMatrixD> covariances;
-map<string, TMatrixD_Ptr> AverageDataParser::getCovariances() const {
-  map<string, TMatrixD_Ptr> covariances;
+map<string, TMatrixD> AverageDataParser::getCovariances() const {
+  map<string, TMatrixD> covariances;
   double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
-  covariances["00stat"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData1));
+  covariances.insert(std::map<string,TMatrixD>::value_type("00stat", TMatrixD(3,3,matrixData1)));
   double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
-  covariances["01erra"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData2));
+  covariances.insert(std::map<string,TMatrixD>::value_type("01erra", TMatrixD(3,3,matrixData2)));
   double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
-  covariances["02errb"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData3));
+  covariances.insert(std::map<string,TMatrixD>::value_type("02errb", TMatrixD(3,3,matrixData3)));
   double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
-  covariances["03errc"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData4));
+  covariances.insert(std::map<string,TMatrixD>::value_type("03errc", TMatrixD(3,3,matrixData4)));
   return covariances;
 }
 
