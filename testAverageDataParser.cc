@@ -4,7 +4,7 @@
 
 #include "AverageDataParser.hh"
 
-#include "stdio.h"
+#include <stdio.h>
 
 #include <iostream>
 #include <stdexcept>
@@ -12,13 +12,17 @@
 #include <vector>
 #include <map>
 
-#include "TObject.h"
-#include "TMatrixD.h"
+#include <boost/smart_ptr.hpp>
+#include <TObject.h>
+#include <TMatrixD.h>
 
 // BOOST test stuff:
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE averagedataparsertests
 #include <boost/test/unit_test.hpp>
+
+// TypeDefs
+typedef boost::shared_ptr<TMatrixD> TMatrixD_Ptr;
 
 // Namespaces:
 using std::string;
@@ -161,34 +165,6 @@ BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
   }
 }
 
-// BOOST_AUTO_TEST_CASE( testgetCovariances ) {
-//   map<string, TMatrixD> covariances;
-//   map<string, TMatrixD> expectedcovariances;
-//   double data[]= {0.09, 0.0, 0.0, 0.0, 0.1089, 0.0, 0.0, 0.0, 0.16};
-//   TMatrixD tmp(3,3,data);
-//     /* Python
-//         covariances= self.__parser.getCovariances()
-//         expectedCovariances= { '00stat': matrix( [ [ 0.09, 0.0,  0.0 ],
-//                                                    [ 0.0, 0.1089, 0.0 ],
-//                                                    [ 0.0, 0.0, 0.16 ] ] ), 
-//                                '01err1': matrix( [ [ 1.21, 1.21, 1.21 ],
-//                                                    [ 1.21, 1.69, 1.69 ],
-//                                                    [ 1.21, 1.69, 2.25 ] ] ), 
-//                                '03err3': matrix( [ [ 5.76, 5.76, 5.76 ],
-//                                                    [ 5.76, 9.61, 9.61 ],
-//                                                    [ 5.76, 9.61, 12.25 ] ] ),
-//                                '02err2': matrix( [ [ 0.81, 1.35, 1.71 ],
-//                                                    [ 1.35, 2.25, 2.85 ],
-//                                                    [ 1.71, 2.85, 3.61 ] ] ), 
-//                                '04err4': matrix( [ [ 1.96, 4.06, 4.62 ],
-//                                                    [ 4.06, 8.41, 9.57 ],
-//                                                    [ 4.62, 9.57, 10.89 ] ] ) }
-//         self.assertEqual( sorted( covariances.keys() ), 
-//                           sorted( expectedCovariances.keys() ) )
-//                           */
-//  }
-
-
 BOOST_AUTO_TEST_SUITE_END()
 
 class AverageDataParserOptionsFixture {
@@ -246,39 +222,34 @@ BOOST_AUTO_TEST_CASE( testErrors ) {
 }
 
 BOOST_AUTO_TEST_CASE( testCovariances ) {
-  std::map<string,TMatrixD*> covariances, expectedCovariances;
-  //covariances = parser.getCovariances()
+  std::map<string,TMatrixD_Ptr> expectedCovariances;
+  std::map<string,TMatrixD_Ptr> covariances = parser.getCovariances();
   double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
-  TMatrixD myMatrix1(3,3,matrixData1);
-  expectedCovariances["00stat"] = &myMatrix1;
+  expectedCovariances["00stat"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData1));
   double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
-  TMatrixD myMatrix2(3,3,matrixData2);
-  expectedCovariances["01erra"] = &myMatrix2;
+  expectedCovariances["01erra"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData2));
   double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
-  TMatrixD myMatrix3(3,3,matrixData3);
-  expectedCovariances["02errb"] = &myMatrix3;
+  expectedCovariances["02errb"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData3));
   double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
-  TMatrixD myMatrix4(3,3,matrixData4);
-  expectedCovariances["03errc"] = &myMatrix4;
+  expectedCovariances["03errc"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData4));
   
   bool equalEntries = (covariances.size() == expectedCovariances.size() );
   BOOST_CHECK_MESSAGE(equalEntries, "Covariances and expectedCovariances have different size");
   if (equalEntries) { //iterate over entries and check they are the same
-    std::map<string, TMatrixD* >::const_iterator expecteditr = expectedCovariances.begin();
-    for(std::map<string, TMatrixD* >::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
+    std::map<string, TMatrixD_Ptr>::const_iterator expecteditr = expectedCovariances.begin();
+    for(std::map<string, TMatrixD_Ptr>::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
       BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
-      double* serialisedMatrix = (itr->second)->GetMatrixArray();
-      double* serialisedExpectedMatrix = (expecteditr->second)->GetMatrixArray();
+      const double* serialisedMatrix = (itr->second)->GetMatrixArray();
+      const double* serialisedExpectedMatrix = (expecteditr->second)->GetMatrixArray();
       int matrixSize = (itr->second)->GetNoElements();
       int expectedMatrixSize = (expecteditr->second)->GetNoElements();
       BOOST_CHECK_EQUAL(matrixSize, expectedMatrixSize);
       int matrixNcols = (itr->second)->GetNcols();
       int expectedMatrixNcols = (expecteditr->second)->GetNcols();
       BOOST_CHECK_EQUAL( matrixNcols, expectedMatrixNcols);
-      for (int i=0; i<matrixSize; i++)
-	{
-	  BOOST_CHECK_EQUAL(serialisedMatrix[i],serialisedExpectedMatrix[i]);
-	}
+      for (int i=0; i<matrixSize; i++) {
+        BOOST_CHECK_EQUAL(serialisedMatrix[i],serialisedExpectedMatrix[i]);
+      }
       ++expecteditr;
     }  
   }

@@ -1,0 +1,11 @@
+# Programs
+testAverageDataParser
+testBlue
+testClsqAverage
+testminuitSolver
+
+# Shared libs
+*.so
+
+# Dependancy files
+*.d

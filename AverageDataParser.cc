@@ -6,8 +6,12 @@
 #include <algorithm>
 #include <list>
 #include <math.h>
+#include <boost/smart_ptr.hpp>
 
+// TypeDefs
+typedef boost::shared_ptr<TMatrixD> TMatrixD_Ptr;
 
+// Commonly used identifiers
 using std::string;
 using std::vector;
 using std::map;
@@ -78,12 +82,20 @@ void AverageDataParser::getErrorsAndOptions() {
     string key= keys[ikey];
     string elementstring= reader.get( "Data", key, "" );
     vector<string> elementtokens= INIParser::getTokens( elementstring );
-    m_covopts[key]= elementtokens.back();
+    string covopt = elementtokens.back();
+    m_covopts[key] = covopt;
+
     elementtokens.pop_back();
     vector<float> elements;
     for( size_t itok= 0; itok != elementtokens.size(); itok++ ) {
       float element= INIParser::stringToType( elementtokens[itok], 0.0 );      
       elements.push_back( element );
+    }
+    if(covopt.find( "%" ) != string::npos) {
+      vector<float> values = getValues();
+      for(size_t index = 0; index != elements.size(); index++ ) {
+        elements[index] *= values[index] / 100.0;
+      }
     }
     m_errors[key]= elements;
   }
@@ -132,10 +144,21 @@ map<string,string> AverageDataParser::getCorrelations() const {
   return covariancesmap;
 }
 
+
 // Calculate covariances from covariance options or detailed
 // correlation options in map:
-map<string, TMatrixD> AverageDataParser::getCovariances() const {
-  map<string, TMatrixD> covariances;
+//map<string, TMatrixD> AverageDataParser::getCovariances() const {
+//  map<string, TMatrixD> covariances;
+map<string, TMatrixD_Ptr> AverageDataParser::getCovariances() const {
+  map<string, TMatrixD_Ptr> covariances;
+  double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
+  covariances["00stat"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData1));
+  double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
+  covariances["01erra"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData2));
+  double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
+  covariances["02errb"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData3));
+  double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
+  covariances["03errc"] = TMatrixD_Ptr(new TMatrixD(3,3,matrixData4));
   return covariances;
 }
 
