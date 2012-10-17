@@ -51,22 +51,40 @@ map<string, string> AverageDataParser::getCovoption() {
   return m_covopts;
 }
 
+class LowerCaseMatch {
+public:
+  LowerCaseMatch( const string& s ) : reference( s ) {
+    std::transform( reference.begin(), reference.end(), 
+		    reference.begin(), ::tolower );
+  }
+  bool operator()( const string& teststr ) const {
+    string testlower( teststr );
+    std::transform( testlower.begin(), testlower.end(), 
+		    testlower.begin(), ::tolower );
+    return reference == testlower;
+  }
+private:
+  string reference;
+};
+
 void AverageDataParser::getErrorsAndOptions() {
   vector<string> keys= reader.getNames( "Data" );
   vector<string> removekeys;
-  removekeys.push_back( "Names" );
-  removekeys.push_back( "Values" );
+  removekeys.push_back( "names" );
+  removekeys.push_back( "values" );
   for( size_t ikey= 0; ikey != removekeys.size(); ikey++ ) {
-    vector<string>::iterator pos= std::find( keys.begin(),
-					     keys.end(),
-					     removekeys[ikey] );
-    if( pos != keys.end() ) keys.erase( pos );
+    keys.erase( std::remove_if( keys.begin(), keys.end(),
+				LowerCaseMatch( removekeys[ikey] ) ),
+		keys.end() );
   }
   for( size_t ikey= 0; ikey != keys.size(); ikey++ ) {
     string key= keys[ikey];
     string elementstring= reader.get( "Data", key, "" );
     vector<string> elementtokens= INIParser::getTokens( elementstring );
-    m_covopts[key]= elementtokens.back();
+    string covopt= elementtokens.back();
+    std::transform( covopt.begin(), covopt.end(), 
+		    covopt.begin(), ::tolower );
+    m_covopts[key]= covopt;
     elementtokens.pop_back();
     vector<float> elements;
     for( size_t itok= 0; itok != elementtokens.size(); itok++ ) {
