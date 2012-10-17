@@ -13,60 +13,57 @@ using std::vector;
 using std::map;
 using namespace INIParser;
 
-
+// Ctor:
 AverageDataParser::AverageDataParser( const string& fname ) :
   filename( fname ), reader( fname ) {
   getErrorsAndOptions();
 }
 
+// Return filename:
 string AverageDataParser::getFilename() const {
   return filename;
 }
 
+// Return data values:
 vector<float> AverageDataParser::getValues() const {
-  string valuestring= reader.get( "Data", "Values", "" );
-  vector<string> valuestrings= INIParser::getTokens( valuestring );
+  string valuestring= reader.get( "Data", "values", "" );
+  vector<string> valuetokens= INIParser::getTokens( valuestring );
   vector<float> values;
-  for( vector<string>::const_iterator valueitr= valuestrings.begin(); 
-       valueitr != valuestrings.end(); ++valueitr ) {
-    std::istringstream iss( *valueitr );
-    float value;
-    iss >> value;
+  for( size_t itok= 0; itok != valuetokens.size(); itok++ ) {
+    float value= INIParser::stringToType( valuetokens[itok], 0.0 );
     values.push_back( value );
   }
   return values;
 }
 
+// Return all keys in a section:
 vector<string> AverageDataParser::getNames() const {
-  string namestring= reader.get( "Data", "Names", "" );
+  string namestring= reader.get( "Data", "names", "" );
   vector<string> names= INIParser::getTokens( namestring );
   return names;
 }
 
+// Return map of errors:
 map<string, vector<float> > AverageDataParser::getErrors() {
   return m_errors;
 }
 
+// Return map of covariance options
 map<string, string> AverageDataParser::getCovoption() {
   return m_covopts;
 }
 
-class LowerCaseMatch {
+// Read errors and covariance options from Data section:
+// Predicate for remove_if below:
+class Match {
 public:
-  LowerCaseMatch( const string& s ) : reference( s ) {
-    std::transform( reference.begin(), reference.end(), 
-		    reference.begin(), ::tolower );
-  }
+  Match( const string& s ) : reference( s ) {}
   bool operator()( const string& teststr ) const {
-    string testlower( teststr );
-    std::transform( testlower.begin(), testlower.end(), 
-		    testlower.begin(), ::tolower );
-    return reference == testlower;
+    return reference == teststr;
   }
 private:
   string reference;
 };
-
 void AverageDataParser::getErrorsAndOptions() {
   vector<string> keys= reader.getNames( "Data" );
   vector<string> removekeys;
@@ -74,17 +71,14 @@ void AverageDataParser::getErrorsAndOptions() {
   removekeys.push_back( "values" );
   for( size_t ikey= 0; ikey != removekeys.size(); ikey++ ) {
     keys.erase( std::remove_if( keys.begin(), keys.end(),
-				LowerCaseMatch( removekeys[ikey] ) ),
+				Match( removekeys[ikey] ) ),
 		keys.end() );
   }
   for( size_t ikey= 0; ikey != keys.size(); ikey++ ) {
     string key= keys[ikey];
     string elementstring= reader.get( "Data", key, "" );
     vector<string> elementtokens= INIParser::getTokens( elementstring );
-    string covopt= elementtokens.back();
-    std::transform( covopt.begin(), covopt.end(), 
-		    covopt.begin(), ::tolower );
-    m_covopts[key]= covopt;
+    m_covopts[key]= elementtokens.back();
     elementtokens.pop_back();
     vector<float> elements;
     for( size_t itok= 0; itok != elementtokens.size(); itok++ ) {
@@ -96,6 +90,7 @@ void AverageDataParser::getErrorsAndOptions() {
   return;
 }
 
+// Return total errors for each variable:
 vector<float> AverageDataParser::getTotalErrors() {
   vector<float> totalerrors( getValues().size(), 0.0 );
   for( map<string, vector<float> >::const_iterator typeitr= m_errors.begin(); 
@@ -111,6 +106,9 @@ vector<float> AverageDataParser::getTotalErrors() {
   return totalerrors;
 }
 
+// Read detailed correlation information as a string from extra section
+// "Covariances" if indicated by option in "Data" section.
+// On failure the map containes empty strings.
 map<string,string> AverageDataParser::getCorrelations() const {
   map<string,string> covariancesmap;
   for( map<string, string>::const_iterator itr= m_covopts.begin();
@@ -134,6 +132,8 @@ map<string,string> AverageDataParser::getCorrelations() const {
   return covariancesmap;
 }
 
+// Calculate covariances from covariance options or detailed
+// correlation options in map:
 map<string, TMatrixD> AverageDataParser::getCovariances() const {
   map<string, TMatrixD> covariances;
   return covariances;

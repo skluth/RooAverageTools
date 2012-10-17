@@ -64,9 +64,9 @@ BOOST_AUTO_TEST_CASE( testgetValues ) {
 BOOST_AUTO_TEST_CASE( testgetNames ) {
   vector<string> names= parser.getNames();
   vector<string> expectednames;
-  expectednames.push_back( "Val1" );
-  expectednames.push_back( "Val2" );
-  expectednames.push_back( "Val3" );
+  expectednames.push_back( "val1" );
+  expectednames.push_back( "val2" );
+  expectednames.push_back( "val3" );
   BOOST_CHECK_EQUAL( names.size(), expectednames.size() );
   BOOST_CHECK_EQUAL_COLLECTIONS( names.begin(), names.end(),
                                  expectednames.begin(), expectednames.end() );
@@ -79,27 +79,27 @@ BOOST_AUTO_TEST_CASE( testgetErrors ) {
   tmp.push_back( 0.3 );
   tmp.push_back( 0.33 );
   tmp.push_back( 0.4 );
-  expectederrorsmap["00Stat"]= tmp;
+  expectederrorsmap["00stat"]= tmp;
   tmp.clear();
   tmp.push_back( 1.1 );
   tmp.push_back( 1.3 );
   tmp.push_back( 1.5 );
-  expectederrorsmap["01Err1"]= tmp;
+  expectederrorsmap["01err1"]= tmp;
   tmp.clear();
   tmp.push_back( 0.9 );
   tmp.push_back( 1.5 );
   tmp.push_back( 1.9 );
-  expectederrorsmap["02Err2"]= tmp;
+  expectederrorsmap["02err2"]= tmp;
   tmp.clear();
   tmp.push_back( 2.4 );
   tmp.push_back( 3.1 );
   tmp.push_back( 3.5 );
-  expectederrorsmap["03Err3"]= tmp;
+  expectederrorsmap["03err3"]= tmp;
   tmp.clear();
   tmp.push_back( 1.4 );
   tmp.push_back( 2.9 );
   tmp.push_back( 3.3 );
-  expectederrorsmap["04Err4"]= tmp;
+  expectederrorsmap["04err4"]= tmp;
   tmp.clear();
   BOOST_CHECK_EQUAL( errorsmap.size(), expectederrorsmap.size() );
   for( map<string, vector<float> >::const_iterator itr= errorsmap.begin(),
@@ -129,11 +129,11 @@ BOOST_AUTO_TEST_CASE( testgetTotalErrors ) {
 BOOST_AUTO_TEST_CASE( testgetCovoption ) {
   map<string, string> covopts= parser.getCovoption();
   map<string, string> expectedcovopts;
-  expectedcovopts["00Stat"]= string( "c" );
-  expectedcovopts["01Err1"]= string( "m" );
-  expectedcovopts["02Err2"]= string( "m" );
-  expectedcovopts["03Err3"]= string( "p" );
-  expectedcovopts["04Err4"]= string( "f" );
+  expectedcovopts["00stat"]= string( "c" );
+  expectedcovopts["01err1"]= string( "m" );
+  expectedcovopts["02err2"]= string( "m" );
+  expectedcovopts["03err3"]= string( "p" );
+  expectedcovopts["04err4"]= string( "f" );
   BOOST_CHECK_EQUAL( covopts.size(), expectedcovopts.size() );
   for( map<string, string >::const_iterator itr= covopts.begin(),
 	 expecteditr= expectedcovopts.begin(); 
@@ -147,11 +147,11 @@ BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
   map<string, string > correlations= parser.getCorrelations();
   map<string, string > expectedcorrelations;
   string tmp= "1. 0. 0. 0. 1. 0. 0. 0. 1.";
-  expectedcorrelations["00Stat"]= tmp;
+  expectedcorrelations["00stat"]= tmp;
   tmp= "p p p p p p p p p";
-  expectedcorrelations["01Err1"]= tmp;
+  expectedcorrelations["01err1"]= tmp;
   tmp= "f f f f f f f f f";
-  expectedcorrelations["02Err2"]= tmp;
+  expectedcorrelations["02err2"]= tmp;
   BOOST_CHECK_EQUAL( correlations.size(), expectedcorrelations.size() );
   for( map<string, string >::const_iterator itr= correlations.begin(),
 	 expecteditr= expectedcorrelations.begin(); 
