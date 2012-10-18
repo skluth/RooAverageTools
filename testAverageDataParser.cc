@@ -162,12 +162,21 @@ BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
   }
 }
 
-BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
+BOOST_AUTO_TEST_CASE( testgetCovariances ) {
+  map<string,TMatrixD> covariances= parser.getCovariances();
   map<string,TMatrixD> expectedCovariances;
   double matrixStat[]= { 0.09, 0.0,  0.0,
 			 0.0, 0.1089, 0.0,
 			 0.0, 0.0, 0.16 };
   expectedCovariances.insert( map<string,TMatrixD>::value_type( "00stat", TMatrixD( 3, 3, matrixStat ) ) );
+  double matrixErr1[]= { 1.21, 1.21, 1.21,
+			 1.21, 1.69, 1.69,
+			 1.21, 1.69, 2.25 };
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "01err1", TMatrixD( 3, 3, matrixErr1 ) ) );
+  double matrixErr2[]= { 0.81, 1.35, 1.71,
+			 1.35, 2.25, 2.85,
+			 1.71, 2.85, 3.61 };
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "02err2", TMatrixD( 3, 3, matrixErr2 ) ) );
   double matrixErr3[]= { 5.76, 5.76, 5.76 ,
 			 5.76, 9.61, 9.61,
 			 5.76, 9.61, 12.25 };
@@ -176,7 +185,6 @@ BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
 			 4.06, 8.41, 9.57,
 			 4.62, 9.57, 10.89 };
   expectedCovariances.insert( map<string,TMatrixD>::value_type( "04err4", TMatrixD( 3, 3, matrixErr4 ) ) );
-  map<string,TMatrixD> covariances= parser.makeCovariances();
   BOOST_CHECK_EQUAL( covariances.size(), expectedCovariances.size() );
   for( map<string,TMatrixD>::const_iterator itr= covariances.begin(),
 	 expitr= expectedCovariances.begin();
@@ -255,7 +263,8 @@ BOOST_AUTO_TEST_CASE( testErrors ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
+BOOST_AUTO_TEST_CASE( testgetCovariances ) {
+  map<string,TMatrixD> covariances= parser.getCovariances();
   map<string,TMatrixD> expectedCovariances;
   double matrixStat[]= { 0.117649, 0.0, 0.0,  0.0, 0.14502387, 
 			 0.0, 0.0,  0.0,  0.27405225 };
@@ -263,14 +272,13 @@ BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
   double matrixErra[]= { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  
 			 5.06385009, 3.55888225, 3.55888225, 3.55888225,  
 			 6.85130625 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "01erra", TMatrixD(3,3,matrixErra)));
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "01erra", TMatrixD( 3, 3, matrixErra ) ) );
   double matrixErrb[]= { 0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  
 			 0.81,  3.61 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type("02errb", TMatrixD(3,3,matrixErrb)));
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "02errb", TMatrixD( 3, 3, matrixErrb ) ) );
   double matrixErrc[]= { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 
 			 5.91543564, 5.86075802, 5.91543564, 12.25 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type("03errc", TMatrixD(3,3,matrixErrc)));
-  map<string,TMatrixD> covariances= parser.makeCovariances();
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "03errc", TMatrixD( 3, 3, matrixErrc ) ) );
   BOOST_CHECK_EQUAL( covariances.size(), expectedCovariances.size() );
   for( map<string,TMatrixD>::const_iterator itr= covariances.begin(),
 	 expitr= expectedCovariances.begin();
@@ -291,39 +299,40 @@ BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
 }
 
 
-BOOST_AUTO_TEST_CASE( testCovariances ) {
-  std::map<string,TMatrixD> expectedCovariances;
-  std::map<string,TMatrixD> covariances = parser.getCovariances();
-  double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
-  expectedCovariances.insert(std::map<string,TMatrixD>::value_type("00stat", TMatrixD(3,3,matrixData1)));
-  double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
-  expectedCovariances.insert(std::map<string,TMatrixD>::value_type("01erra", TMatrixD(3,3,matrixData2)));
-  double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
-  expectedCovariances.insert(std::map<string,TMatrixD>::value_type("02errb", TMatrixD(3,3,matrixData3)));
-  double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
-  expectedCovariances.insert(std::map<string,TMatrixD>::value_type("03errc", TMatrixD(3,3,matrixData4)));
+// BOOST_AUTO_TEST_CASE( testCovariances ) {
+//   std::map<string,TMatrixD> expectedCovariances;
+//   std::map<string,TMatrixD> covariances = parser.getCovariances();
+//   double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
+//   expectedCovariances.insert(std::map<string,TMatrixD>::value_type("00stat", TMatrixD(3,3,matrixData1)));
+//   double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
+//   expectedCovariances.insert(std::map<string,TMatrixD>::value_type("01erra", TMatrixD(3,3,matrixData2)));
+//   double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
+//   expectedCovariances.insert(std::map<string,TMatrixD>::value_type("02errb", TMatrixD(3,3,matrixData3)));
+//   double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
+//   expectedCovariances.insert(std::map<string,TMatrixD>::value_type("03errc", TMatrixD(3,3,matrixData4)));
   
-  bool equalEntries = (covariances.size() == expectedCovariances.size() );
-  BOOST_CHECK_MESSAGE(equalEntries, "Covariances and expectedCovariances have different size");
-  if (equalEntries) { //iterate over entries and check they are the same
-    std::map<string, TMatrixD>::const_iterator expecteditr = expectedCovariances.begin();
-    for(std::map<string, TMatrixD>::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
-      BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
-      const double* serialisedMatrix = (itr->second).GetMatrixArray();
-      const double* serialisedExpectedMatrix = (expecteditr->second).GetMatrixArray();
-      int matrixSize = (itr->second).GetNoElements();
-      int expectedMatrixSize = (expecteditr->second).GetNoElements();
-      BOOST_CHECK_EQUAL(matrixSize, expectedMatrixSize);
-      int matrixNcols = (itr->second).GetNcols();
-      int expectedMatrixNcols = (expecteditr->second).GetNcols();
-      BOOST_CHECK_EQUAL( matrixNcols, expectedMatrixNcols);
-      for (int i=0; i<matrixSize; i++) {
-        BOOST_CHECK_EQUAL(serialisedMatrix[i],serialisedExpectedMatrix[i]);
-      }
-      ++expecteditr;
-    }  
-  }
-}
+//   bool equalEntries = (covariances.size() == expectedCovariances.size() );
+//   BOOST_CHECK_MESSAGE(equalEntries, "Covariances and expectedCovariances have different size");
+//   if (equalEntries) { //iterate over entries and check they are the same
+//     std::map<string, TMatrixD>::const_iterator expecteditr = expectedCovariances.begin();
+//     for(std::map<string, TMatrixD>::const_iterator itr = covariances.begin(); itr != covariances.end(); ++itr) {
+//       BOOST_CHECK_EQUAL(itr->first, expecteditr->first);
+//       const double* serialisedMatrix = (itr->second).GetMatrixArray();
+//       const double* serialisedExpectedMatrix = (expecteditr->second).GetMatrixArray();
+//       int matrixSize = (itr->second).GetNoElements();
+//       int expectedMatrixSize = (expecteditr->second).GetNoElements();
+//       BOOST_CHECK_EQUAL(matrixSize, expectedMatrixSize);
+//       int matrixNcols = (itr->second).GetNcols();
+//       int expectedMatrixNcols = (expecteditr->second).GetNcols();
+//       BOOST_CHECK_EQUAL( matrixNcols, expectedMatrixNcols);
+//       for (int i=0; i<matrixSize; i++) {
+//         BOOST_CHECK_CLOSE( serialisedMatrix[i],
+// 			   serialisedExpectedMatrix[i], 1.0e-4 );
+//       }
+//       ++expecteditr;
+//     }  
+//   }
+// }
 
 BOOST_AUTO_TEST_CASE( testSysterrormatrix ) {
   std::map<unsigned int, std::vector<float> > systerrmatrix;

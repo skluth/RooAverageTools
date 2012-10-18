@@ -16,8 +16,13 @@ using namespace INIParser;
 
 // Ctor:
 AverageDataParser::AverageDataParser( const string& fname ) :
-  filename( fname ), reader( fname ) {
-  getErrorsAndOptions();
+  filename( fname ) {
+  INIParser::INIReader reader( fname );
+  makeNames( reader );
+  makeValues( reader );
+  makeErrorsAndOptions( reader );
+  makeCorrelations( reader );
+  makeCovariances();
 }
 
 // Return filename:
@@ -27,30 +32,35 @@ string AverageDataParser::getFilename() const {
 
 // Return data values:
 vector<float> AverageDataParser::getValues() const {
+  return m_values;
+}
+void AverageDataParser::makeValues( const INIParser::INIReader& reader ) {
   string valuestring= reader.get( "Data", "values", "" );
   vector<string> valuetokens= INIParser::getTokens( valuestring );
-  vector<float> values;
   for( size_t itok= 0; itok != valuetokens.size(); itok++ ) {
     float value= INIParser::stringToType( valuetokens[itok], 0.0 );
-    values.push_back( value );
+    m_values.push_back( value );
   }
-  return values;
+  return;
 }
 
 // Return all keys in a section:
 vector<string> AverageDataParser::getNames() const {
+  return m_names;
+}
+void AverageDataParser::makeNames( const INIParser::INIReader& reader ) {
   string namestring= reader.get( "Data", "names", "" );
-  vector<string> names= INIParser::getTokens( namestring );
-  return names;
+  m_names= INIParser::getTokens( namestring );
+  return;
 }
 
 // Return map of errors:
-map<string, vector<float> > AverageDataParser::getErrors() {
+map<string, vector<float> > AverageDataParser::getErrors() const {
   return m_errors;
 }
 
 // Return map of covariance options
-map<string, string> AverageDataParser::getCovoption() {
+map<string, string> AverageDataParser::getCovoption() const {
   return m_covopts;
 }
 
@@ -65,7 +75,7 @@ public:
 private:
   string reference;
 };
-void AverageDataParser::getErrorsAndOptions() {
+void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader& reader ) {
   vector<string> keys= reader.getNames( "Data" );
   vector<string> removekeys;
   removekeys.push_back( "names" );
@@ -88,9 +98,8 @@ void AverageDataParser::getErrorsAndOptions() {
       elements.push_back( element );
     }
     if( covopt.find( "%" ) != string::npos ) {
-      vector<float> values= getValues();
       for( size_t ival= 0; ival != elements.size(); ival++ ) {
-        elements[ival]*= values[ival] / 100.0;
+        elements[ival]*= m_values[ival] / 100.0;
       }
     }
     m_errors[key]= elements;
@@ -99,8 +108,8 @@ void AverageDataParser::getErrorsAndOptions() {
 }
 
 // Return total errors for each variable:
-vector<float> AverageDataParser::getTotalErrors() {
-  vector<float> totalerrors( getValues().size(), 0.0 );
+vector<float> AverageDataParser::getTotalErrors() const {
+  vector<float> totalerrors( m_values.size(), 0.0 );
   for( map<string, vector<float> >::const_iterator typeitr= m_errors.begin(); 
        typeitr != m_errors.end(); ++typeitr ) {
     vector<float> errors= typeitr->second;
@@ -118,13 +127,15 @@ vector<float> AverageDataParser::getTotalErrors() {
 // "Covariances" if indicated by option in "Data" section.
 // On failure the map containes empty strings.
 map<string,string> AverageDataParser::getCorrelations() const {
-  map<string,string> covariancesmap;
+  return m_correlations;
+}
+void AverageDataParser::makeCorrelations( const INIParser::INIReader& reader ) {
   for( map<string, string>::const_iterator itr= m_covopts.begin();
        itr != m_covopts.end(); itr++ ) {
-    string key= itr->first;
     string covopt= itr->second;
     if( covopt.find( "c" ) != string::npos or 
 	covopt.find( "m" ) != string::npos ) {
+      string key= itr->first;
       string covariancesstring= reader.get( "Covariances", key, "" );
       vector<string> covariancestokens= 
 	INIParser::getTokens( covariancesstring );
@@ -134,14 +145,19 @@ map<string,string> AverageDataParser::getCorrelations() const {
 	str+= covariancestokens[itok];
 	if( itok < ntok-1 ) str+= " ";
       }
-      covariancesmap[key]= str;
+      m_correlations[key]= str;
     }
   }
-  return covariancesmap;
+  return;
 }
 
-Double_t AverageDataParser::calcCovariance( string covopt, 
-					    vector<float> errors, 
+// Getter for covariances:
+map<string, TMatrixD> AverageDataParser::getCovariances() const {
+  return m_covariances;
+}
+// Helper to calculate covariances from errors and options u, p, f, a:
+Double_t AverageDataParser::calcCovariance( const string& covopt, 
+					    const vector<float>& errors, 
 					    size_t ierr, size_t jerr ) const {
   Double_t cov= 0.0;
   if( covopt.find( "u" ) != string::npos ) {
@@ -159,9 +175,8 @@ Double_t AverageDataParser::calcCovariance( string covopt,
   }
   return cov;
 }
-
-map<string, TMatrixD> AverageDataParser::makeCovariances() const {
-  map<string, TMatrixD> covariances;
+// Calculate covariances:
+void AverageDataParser::makeCovariances() {
   for( map<string,vector<float> >::const_iterator mapitr= m_errors.begin();
        mapitr != m_errors.end(); mapitr++ ) {
     string errorkey= mapitr->first;
@@ -170,19 +185,18 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
     string covopt= m_covopts.find( errorkey )->second;
     TMatrixD covm( nerr, nerr );
     if( covopt.find( "gpr" ) != string::npos ) {
-      vector<float> values= getValues();
       vector<float> ratios;
       for( size_t ierr= 0; ierr < errors.size(); ierr++ ) {
-	ratios.push_back( errors[ierr]/values[ierr] );
+	ratios.push_back( errors[ierr]/m_values[ierr] );
       }
       Double_t minrelerr= *std::min_element( ratios.begin(), ratios.end() );
       for( size_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
 	  if( ierr == jerr ) covm(ierr,ierr)= errors[ierr]*errors[ierr];
-	  else covm(ierr,jerr)= minrelerr*minrelerr*values[ierr]*values[jerr];
+	  else covm(ierr,jerr)= 
+		 minrelerr*minrelerr*m_values[ierr]*m_values[jerr];
 	}
       }
-      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
     }
     else if( covopt.find( "gp" ) != string::npos ) {
       Double_t minerr= *std::min_element( errors.begin(), errors.end() );
@@ -192,7 +206,6 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
 	  else covm(ierr,jerr)= minerr*minerr;
 	}
       }
-      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
     }
     else if( covopt.find( "u" ) != string::npos or
 	     covopt.find( "p" ) != string::npos or
@@ -203,7 +216,6 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
 	  covm(ierr,jerr)= calcCovariance( covopt, errors, ierr, jerr );
 	}
       }
-      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
     }
     else if( covopt.find( "c" ) != string::npos ) {
       map<string,string> corrmap= getCorrelations();
@@ -216,29 +228,27 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
 	  covm(ierr,jerr)= corr*errors[ierr]*errors[jerr];
 	}
       }
-      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
+    }
+    else if( covopt.find( "m" ) != string::npos ) {
+      map<string,string> corrmap= getCorrelations();
+      string corrstr= corrmap[errorkey];
+      vector<string> corrtokens= INIParser::getTokens( corrstr );
+      for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	  covm(ierr,jerr)= calcCovariance( corrtokens[ierr*nerr+jerr],
+					   errors, ierr, jerr );
+	}
+      }
     }
     else {
       std::cerr << "Covoption " << covopt << " not recognised" << std::endl;
     }
+    m_covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
   }
-  return covariances;
+  return;
 }
   
-// Calculate covariances from covariance options or detailed
-// correlation options in map:
-map<string, TMatrixD> AverageDataParser::getCovariances() const {
-  map<string, TMatrixD> covariances;
-  double matrixData1 [] = {  0.117649, 0.0, 0.0,  0.0, 0.14502387, 0.0, 0.0,  0.0,  0.27405225 };
-  covariances.insert(std::map<string,TMatrixD>::value_type("00stat", TMatrixD(3,3,matrixData1)));
-  double matrixData2 [] = { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  5.06385009,  3.55888225, 3.55888225,  3.55888225,  6.85130625};
-  covariances.insert(std::map<string,TMatrixD>::value_type("01erra", TMatrixD(3,3,matrixData2)));
-  double matrixData3 [] = {  0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  0.81,  3.61};
-  covariances.insert(std::map<string,TMatrixD>::value_type("02errb", TMatrixD(3,3,matrixData3)));
-  double matrixData4 [] = { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 5.91543564, 5.86075802, 5.91543564, 12.25 };
-  covariances.insert(std::map<string,TMatrixD>::value_type("03errc", TMatrixD(3,3,matrixData4)));
-  return covariances;
-}
+
 
 map<unsigned int, vector<float> > 
 AverageDataParser::getSysterrorMatrix() const {
