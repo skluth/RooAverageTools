@@ -146,6 +146,16 @@ Double_t AverageDataParser::calcCovariance( string covopt,
   if( covopt.find( "u" ) != string::npos ) {
     if( ierr == jerr ) cov= errors[ierr]*errors[ierr];
   }
+  else if( covopt.find( "p" ) != string::npos ) {
+    cov= pow( std::min( errors[ierr], errors[jerr] ), 2 );
+  }
+  else if( covopt.find( "f" ) != string::npos ) {
+    cov= errors[ierr]*errors[jerr];
+  }
+  else if( covopt.find( "a" ) != string::npos ) {
+    if( ierr == jerr ) cov= errors[ierr]*errors[ierr];
+    else cov= - errors[ierr]*errors[jerr];
+  }
   return cov;
 }
 
@@ -158,14 +168,28 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
     size_t nerr= errors.size();
     string covopt= m_covopts.find( errorkey )->second;
     TMatrixD covm( nerr, nerr );
-    if( covopt.find( "u" ) != string::npos ) {
+    if( covopt.find( "gpr" ) != string::npos ) {
+    }
+    else if( covopt.find( "gp" ) != string::npos ) {
+      Double_t minerr= *std::min_element( errors.begin(), errors.end() );
+      for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	  if( ierr == jerr ) covm(ierr,ierr)= errors[ierr]*errors[ierr];
+	  else covm(ierr,jerr)= minerr*minerr;
+	}
+      }
+      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
+    }
+    else if( covopt.find( "u" ) != string::npos or
+	     covopt.find( "p" ) != string::npos or
+	     covopt.find( "f" ) != string::npos or
+	     covopt.find( "a" ) != string::npos ) {
       for( size_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
 	  covm(ierr,jerr)= calcCovariance( covopt, errors, ierr, jerr );
 	}
       }
-      covariances.insert( map<string, TMatrixD>::value_type( errorkey,
-							     covm ) );
+      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
     }
   }
   return covariances;
