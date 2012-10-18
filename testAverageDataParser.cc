@@ -164,18 +164,18 @@ BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
 
 BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
   map<string,TMatrixD> expectedCovariances;
+  double matrixStat[]= { 0.09, 0.0,  0.0,
+			 0.0, 0.1089, 0.0,
+			 0.0, 0.0, 0.16 };
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "00stat", TMatrixD( 3, 3, matrixStat ) ) );
   double matrixErr3[]= { 5.76, 5.76, 5.76 ,
 			 5.76, 9.61, 9.61,
 			 5.76, 9.61, 12.25 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "03err3", 
-								TMatrixD( 3, 3, 
-									  matrixErr3 ) ) );
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "03err3", TMatrixD( 3, 3, matrixErr3 ) ) );
   double matrixErr4[]= { 1.96, 4.06, 4.62,
 			 4.06, 8.41, 9.57,
 			 4.62, 9.57, 10.89 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "04err4", 
-								TMatrixD( 3, 3, 
-									  matrixErr4 ) ) );
+  expectedCovariances.insert( map<string,TMatrixD>::value_type( "04err4", TMatrixD( 3, 3, matrixErr4 ) ) );
   map<string,TMatrixD> covariances= parser.makeCovariances();
   BOOST_CHECK_EQUAL( covariances.size(), expectedCovariances.size() );
   for( map<string,TMatrixD>::const_iterator itr= covariances.begin(),
@@ -261,13 +261,15 @@ BOOST_AUTO_TEST_CASE( testMakeCovariances ) {
 			 0.0, 0.0,  0.0,  0.27405225 };
   expectedCovariances.insert( map<string,TMatrixD>::value_type( "00stat", TMatrixD( 3, 3, matrixStat ) ) );
   double matrixErra[]= { 3.55888225, 3.55888225, 3.55888225, 3.55888225,  
-			 5.06385009,  3.55888225, 3.55888225,  3.55888225,  
-			 6.85130625};
+			 5.06385009, 3.55888225, 3.55888225, 3.55888225,  
+			 6.85130625 };
   expectedCovariances.insert( map<string,TMatrixD>::value_type( "01erra", TMatrixD(3,3,matrixErra)));
   double matrixErrb[]= { 0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  
 			 0.81,  3.61 };
   expectedCovariances.insert( map<string,TMatrixD>::value_type("02errb", TMatrixD(3,3,matrixErrb)));
-
+  double matrixErrc[]= { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 
+			 5.91543564, 5.86075802, 5.91543564, 12.25 };
+  expectedCovariances.insert( map<string,TMatrixD>::value_type("03errc", TMatrixD(3,3,matrixErrc)));
   map<string,TMatrixD> covariances= parser.makeCovariances();
   BOOST_CHECK_EQUAL( covariances.size(), expectedCovariances.size() );
   for( map<string,TMatrixD>::const_iterator itr= covariances.begin(),

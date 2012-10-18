@@ -5,6 +5,7 @@
 #include <utility>
 #include <algorithm>
 #include <list>
+#include <iostream>
 #include <math.h>
 
 // Commonly used identifiers
@@ -169,6 +170,19 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
     string covopt= m_covopts.find( errorkey )->second;
     TMatrixD covm( nerr, nerr );
     if( covopt.find( "gpr" ) != string::npos ) {
+      vector<float> values= getValues();
+      vector<float> ratios;
+      for( size_t ierr= 0; ierr < errors.size(); ierr++ ) {
+	ratios.push_back( errors[ierr]/values[ierr] );
+      }
+      Double_t minrelerr= *std::min_element( ratios.begin(), ratios.end() );
+      for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	  if( ierr == jerr ) covm(ierr,ierr)= errors[ierr]*errors[ierr];
+	  else covm(ierr,jerr)= minrelerr*minrelerr*values[ierr]*values[jerr];
+	}
+      }
+      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
     }
     else if( covopt.find( "gp" ) != string::npos ) {
       Double_t minerr= *std::min_element( errors.begin(), errors.end() );
@@ -190,6 +204,22 @@ map<string, TMatrixD> AverageDataParser::makeCovariances() const {
 	}
       }
       covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
+    }
+    else if( covopt.find( "c" ) != string::npos ) {
+      map<string,string> corrmap= getCorrelations();
+      string corrstr= corrmap[errorkey];
+      vector<string> corrtokens= INIParser::getTokens( corrstr );
+      for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	  Double_t corr= INIParser::stringToType( corrtokens[ierr*nerr+jerr], 
+						  0.0 );
+	  covm(ierr,jerr)= corr*errors[ierr]*errors[jerr];
+	}
+      }
+      covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
+    }
+    else {
+      std::cerr << "Covoption " << covopt << " not recognised" << std::endl;
     }
   }
   return covariances;
