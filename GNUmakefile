@@ -4,7 +4,7 @@
 
 CXX = g++
 LD = $(CXX)
-CXXFLAGS = -Wall -fPIC
+CXXFLAGS = -g -Wall -fPIC
 
 LIBFILES = AverageDataParser.cc ClsqAverage.cc blue.cc minuitSolver.cc
 LIB = libRooAverageTools.so
