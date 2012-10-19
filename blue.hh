@@ -74,10 +74,10 @@ public:
 
 
 
-  std::map<std::string, std::vector<float> > errors;
+  std::map<std::string, std::vector<double> > errors;
   std::vector<std::string> names;
   std::map<std::string, std::string > covopts;
-  std::map<std::string, std::vector<float> > correlations;
+  std::map<std::string, std::vector<double> > correlations;
   std::map<std::string, TMatrixD > hcov;
   TMatrixD cov;
   TMatrixDSym inv;
@@ -90,7 +90,7 @@ public:
 public:
   blue(std::string filename);
   virtual ~blue();
-  TMatrixD _columnVector(std::vector<float> stdvec);
+  TMatrixD _columnVector(std::vector<double> stdvec);
   
   TMatrixD  calcWeightsMatrix();
   double calcAverage();

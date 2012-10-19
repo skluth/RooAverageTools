@@ -61,7 +61,7 @@ blue::~blue() {
 
 }
 
-TMatrixD blue::_columnVector(std::vector<float> stdvec){
+TMatrixD blue::_columnVector(std::vector<double> stdvec){
 	TMatrixD result;
 	int size=stdvec.size();
 	result.ResizeTo(size,1);
