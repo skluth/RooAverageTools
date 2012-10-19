@@ -1,6 +1,7 @@
 
 
 #include "AverageDataParser.hh"
+#include "INIReader.hh"
 #include <vector>
 #include <utility>
 #include <algorithm>
@@ -14,37 +15,49 @@ using std::vector;
 using std::map;
 using namespace INIParser;
 
-// Ctor:
-AverageDataParser::AverageDataParser( const string& fname ) :
-  filename( fname ) {
+// Ctors:
+AverageDataParser::AverageDataParser( const string& fname ) {
   INIParser::INIReader reader( fname );
   makeNames( reader );
   makeValues( reader );
   makeErrorsAndOptions( reader );
   makeCorrelations( reader );
+  checkRelativeErrors();
   makeCovariances();
 }
 
-// Return filename:
-string AverageDataParser::getFilename() const {
-  return filename;
+AverageDataParser::AverageDataParser( const vector<string>& names,
+				      const vector<double>& values,
+				      const map<string,vector<double> >& errors,
+				      const map<string,string>& covopts,
+				      map<string,string> correlations ) :
+  m_names( names ), m_values( values ), m_errors( errors ), 
+  m_covopts( covopts ), m_correlations( correlations ) {
+  checkRelativeErrors();
+  makeCovariances();
 }
 
+
+// Return filename:
+// string AverageDataParser::getFilename() const {
+//   return filename;
+// }
+
 // Return data values:
-vector<float> AverageDataParser::getValues() const {
+vector<double> AverageDataParser::getValues() const {
   return m_values;
 }
 void AverageDataParser::makeValues( const INIParser::INIReader& reader ) {
   string valuestring= reader.get( "Data", "values", "" );
   vector<string> valuetokens= INIParser::getTokens( valuestring );
   for( size_t itok= 0; itok != valuetokens.size(); itok++ ) {
-    float value= INIParser::stringToType( valuetokens[itok], 0.0 );
+    double value= INIParser::stringToType( valuetokens[itok], 0.0 );
     m_values.push_back( value );
   }
   return;
 }
 
-// Return all keys in a section:
+// Return all variable names:
 vector<string> AverageDataParser::getNames() const {
   return m_names;
 }
@@ -54,8 +67,8 @@ void AverageDataParser::makeNames( const INIParser::INIReader& reader ) {
   return;
 }
 
-// Return map of errors:
-map<string, vector<float> > AverageDataParser::getErrors() const {
+// Return map of error values for each error category:
+map<string, vector<double> > AverageDataParser::getErrors() const {
   return m_errors;
 }
 
@@ -75,6 +88,18 @@ public:
 private:
   string reference;
 };
+void AverageDataParser::checkRelativeErrors() {
+  for( map<string,vector<double> >::iterator mapitr= m_errors.begin();
+       mapitr != m_errors.end(); mapitr++ ) {
+    string errorkey= mapitr->first;
+    if( m_covopts[errorkey].find( "%" ) != string::npos ) {
+      vector<double>& errors= mapitr->second;
+      for( size_t ierr= 0; ierr != errors.size(); ierr++ ) {
+        errors[ierr]*= m_values[ierr] / 100.0;
+      }
+    }
+  }
+}
 void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader& reader ) {
   vector<string> keys= reader.getNames( "Data" );
   vector<string> removekeys;
@@ -92,15 +117,10 @@ void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader& reader
     string covopt= elementtokens.back();
     m_covopts[key]= covopt;
     elementtokens.pop_back();
-    vector<float> elements;
+    vector<double> elements;
     for( size_t itok= 0; itok != elementtokens.size(); itok++ ) {
-      float element= INIParser::stringToType( elementtokens[itok], 0.0 );      
+      double element= INIParser::stringToType( elementtokens[itok], 0.0 );      
       elements.push_back( element );
-    }
-    if( covopt.find( "%" ) != string::npos ) {
-      for( size_t ival= 0; ival != elements.size(); ival++ ) {
-        elements[ival]*= m_values[ival] / 100.0;
-      }
     }
     m_errors[key]= elements;
   }
@@ -108,11 +128,11 @@ void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader& reader
 }
 
 // Return total errors for each variable:
-vector<float> AverageDataParser::getTotalErrors() const {
-  vector<float> totalerrors( m_values.size(), 0.0 );
-  for( map<string, vector<float> >::const_iterator typeitr= m_errors.begin(); 
+vector<double> AverageDataParser::getTotalErrors() const {
+  vector<double> totalerrors( m_values.size(), 0.0 );
+  for( map<string, vector<double> >::const_iterator typeitr= m_errors.begin(); 
        typeitr != m_errors.end(); ++typeitr ) {
-    vector<float> errors= typeitr->second;
+    vector<double> errors= typeitr->second;
     for( size_t ierr= 0; ierr < errors.size(); ierr++ ) {
       totalerrors[ierr]+= errors[ierr]*errors[ierr];
     }
@@ -151,13 +171,16 @@ void AverageDataParser::makeCorrelations( const INIParser::INIReader& reader ) {
   return;
 }
 
-// Getter for covariances:
+// Getters for covariances:
 map<string, TMatrixD> AverageDataParser::getCovariances() const {
   return m_covariances;
 }
+map<string, TMatrixD> AverageDataParser::getReducedCovariances() const {
+  return m_reducedCovariances;
+}
 // Helper to calculate covariances from errors and options u, p, f, a:
 Double_t AverageDataParser::calcCovariance( const string& covopt, 
-					    const vector<float>& errors, 
+					    const vector<double>& errors, 
 					    size_t ierr, size_t jerr ) const {
   Double_t cov= 0.0;
   if( covopt.find( "u" ) != string::npos ) {
@@ -177,24 +200,31 @@ Double_t AverageDataParser::calcCovariance( const string& covopt,
 }
 // Calculate covariances:
 void AverageDataParser::makeCovariances() {
-  for( map<string,vector<float> >::const_iterator mapitr= m_errors.begin();
+  for( map<string,vector<double> >::const_iterator mapitr= m_errors.begin();
        mapitr != m_errors.end(); mapitr++ ) {
     string errorkey= mapitr->first;
-    vector<float> errors= mapitr->second;
+    vector<double> errors= mapitr->second;
     size_t nerr= errors.size();
     string covopt= m_covopts.find( errorkey )->second;
     TMatrixD covm( nerr, nerr );
+    TMatrixD reducedcovm( nerr, nerr );
     if( covopt.find( "gpr" ) != string::npos ) {
-      vector<float> ratios;
+      vector<double> ratios;
       for( size_t ierr= 0; ierr < errors.size(); ierr++ ) {
 	ratios.push_back( errors[ierr]/m_values[ierr] );
       }
       Double_t minrelerr= *std::min_element( ratios.begin(), ratios.end() );
       for( size_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
-	  if( ierr == jerr ) covm(ierr,ierr)= errors[ierr]*errors[ierr];
-	  else covm(ierr,jerr)= 
-		 minrelerr*minrelerr*m_values[ierr]*m_values[jerr];
+	  if( ierr == jerr ) {
+	    covm(ierr,ierr)= errors[ierr]*errors[ierr];
+	    reducedcovm(ierr,ierr)= 
+	      std::max( pow( errors[ierr], 2 ) -
+			pow( minrelerr*m_values[ierr], 2 ), 0.0 );
+	  }
+	  else {
+	    covm(ierr,jerr)= minrelerr*minrelerr*m_values[ierr]*m_values[jerr];
+	  }
 	}
       }
     }
@@ -202,8 +232,13 @@ void AverageDataParser::makeCovariances() {
       Double_t minerr= *std::min_element( errors.begin(), errors.end() );
       for( size_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
-	  if( ierr == jerr ) covm(ierr,ierr)= errors[ierr]*errors[ierr];
-	  else covm(ierr,jerr)= minerr*minerr;
+	  if( ierr == jerr ) {
+	    covm(ierr,ierr)= errors[ierr]*errors[ierr];
+	    reducedcovm(ierr,ierr)= errors[ierr]*errors[ierr]-minerr*minerr;
+	  }
+	  else {
+	    covm(ierr,jerr)= minerr*minerr;
+	  }
 	}
       }
     }
@@ -216,10 +251,14 @@ void AverageDataParser::makeCovariances() {
 	  covm(ierr,jerr)= calcCovariance( covopt, errors, ierr, jerr );
 	}
       }
+      if( covopt.find( "f" ) != string::npos ) {
+      }
+      else {
+	reducedcovm= covm;
+      }
     }
     else if( covopt.find( "c" ) != string::npos ) {
-      map<string,string> corrmap= getCorrelations();
-      string corrstr= corrmap[errorkey];
+      string corrstr= m_correlations[errorkey];
       vector<string> corrtokens= INIParser::getTokens( corrstr );
       for( size_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
@@ -228,10 +267,10 @@ void AverageDataParser::makeCovariances() {
 	  covm(ierr,jerr)= corr*errors[ierr]*errors[jerr];
 	}
       }
+      reducedcovm= covm;
     }
     else if( covopt.find( "m" ) != string::npos ) {
-      map<string,string> corrmap= getCorrelations();
-      string corrstr= corrmap[errorkey];
+      string corrstr= m_correlations[errorkey];
       vector<string> corrtokens= INIParser::getTokens( corrstr );
       for( size_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
@@ -239,34 +278,41 @@ void AverageDataParser::makeCovariances() {
 					   errors, ierr, jerr );
 	}
       }
+      if( corrstr.find( "f" ) != string::npos and 
+	  corrstr.find( "p" ) == string::npos ) {
+      }
+      else {
+	reducedcovm= covm;
+      }
     }
     else {
       std::cerr << "Covoption " << covopt << " not recognised" << std::endl;
     }
     m_covariances.insert( map<string, TMatrixD>::value_type( errorkey, covm ) );
+    m_reducedCovariances.insert( map<string, TMatrixD>::value_type( errorkey, reducedcovm ) );
   }
   return;
 }
   
 
 
-map<unsigned int, vector<float> > 
-AverageDataParser::getSysterrorMatrix() const {
-  map<unsigned int, vector<float> > systerrmatrix;
-  vector<float> tmp;
-  tmp.push_back(1.8865);
-  tmp.push_back(1.8865);
-  tmp.push_back(1.8865);
-  systerrmatrix[1] = tmp;
-  tmp.clear();
-  tmp.push_back(0.9);
-  tmp.push_back(0.9);
-  tmp.push_back(0.9);
-  systerrmatrix[2] = tmp;
-  tmp.clear();
-  tmp.push_back(2.4);
-  tmp.push_back(2.42239067);
-  tmp.push_back(2.4419825);
-  systerrmatrix[3] = tmp;
-  return systerrmatrix;
+map<int,vector<double> > AverageDataParser::getSysterrorMatrix() const {
+  return m_systerrmatrix;
+  // map<int,vector<double> > systerrmatrix;
+  // vector<double> tmp;
+  // tmp.push_back(1.8865);
+  // tmp.push_back(1.8865);
+  // tmp.push_back(1.8865);
+  // systerrmatrix[1] = tmp;
+  // tmp.clear();
+  // tmp.push_back(0.9);
+  // tmp.push_back(0.9);
+  // tmp.push_back(0.9);
+  // systerrmatrix[2] = tmp;
+  // tmp.clear();
+  // tmp.push_back(2.4);
+  // tmp.push_back(2.42239067);
+  // tmp.push_back(2.4419825);
+  // systerrmatrix[3] = tmp;
+  // return systerrmatrix;
 }

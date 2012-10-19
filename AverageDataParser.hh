@@ -1,52 +1,59 @@
 #ifndef AVERAGEDATAPARSER_HH
 #define AVERAGEDATAPARSER_HH
 
-#include "INIReader.hh"
-
 #include <string>
 #include <vector>
+#include <map>
 
-#include <TObject.h>
-#include <TMatrixD.h>
+#include "TMatrixD.h"
+
+namespace INIParser {
+  class INIReader;
+}
 
 class AverageDataParser {
 
 public:
 
   AverageDataParser( const std::string& fname );
+  AverageDataParser( const std::vector<std::string>& names,
+		     const std::vector<double>& values,
+		     const std::map<std::string,std::vector<double> >& errors,
+		     const std::map<std::string,std::string>& covopts,
+		     std::map<std::string,std::string> correlations=
+		     std::map<std::string,std::string>() );
 
-  std::string getFilename() const;
-  std::vector<float> getValues() const;
   std::vector<std::string> getNames() const;
-  std::map<std::string, std::vector<float> > getErrors() const;
-  std::vector<float> getTotalErrors() const;
+  std::vector<double> getValues() const;
+  std::map<std::string, std::vector<double> > getErrors() const;
   std::map<std::string, std::string> getCovoption() const;
   std::map<std::string, std::string> getCorrelations() const;
+  std::vector<double> getTotalErrors() const;
   std::map<std::string, TMatrixD> getCovariances() const;
-  std::map<unsigned int, std::vector<float> > getSysterrorMatrix() const;
+  std::map<std::string, TMatrixD> getReducedCovariances() const;
+  std::map<int,std::vector<double> > getSysterrorMatrix() const;
+
+private:
 
   void makeNames( const INIParser::INIReader& );
   void makeValues( const INIParser::INIReader& );
   void makeErrorsAndOptions( const INIParser::INIReader& );
+  void checkRelativeErrors();
   void makeCorrelations( const INIParser::INIReader& );
   void makeCovariances();
   Double_t calcCovariance( const std::string& covopt, 
-			   const std::vector<float>& errors, 
+			   const std::vector<double>& errors, 
 			   size_t ierr, size_t jerr ) const;
 
-private:
-  std::map<std::string, std::vector<float> > m_errors;
-  std::map<std::string, std::string> m_covopts;
-  std::map<std::string, TMatrixD> m_covariances;
-  std::map<std::string, std::string> m_correlations;
-  std::vector<float> m_values;
   std::vector<std::string> m_names;
-  std::string filename;
+  std::vector<double> m_values;
+  std::map<std::string,std::vector<double> > m_errors;
+  std::map<std::string,std::string> m_covopts;
+  std::map<std::string,std::string> m_correlations;
+  std::map<std::string,TMatrixD> m_covariances;
+  std::map<std::string,TMatrixD> m_reducedCovariances;
+  std::map<int,std::vector<double> > m_systerrmatrix;
 
 };
-
-
-
-
 
 #endif
