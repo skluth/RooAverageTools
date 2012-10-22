@@ -27,7 +27,7 @@ using std::vector;
 using std::map;
 
 // Helpers:
-void checkVectorF( const vector<double>& obtained,
+void checkVectorD( const vector<double>& obtained,
 		   const vector<double>& expected ) {
   BOOST_CHECK_EQUAL( obtained.size(), expected.size() );
   for( size_t i= 0; i < obtained.size(); i++ ) {
@@ -46,6 +46,39 @@ void checkMatrix( const TMatrixD& obtained,
   }
 }
 
+void checkStringMaps( const map<string,string>& obtained,
+		      const map<string,string>& expected ) {
+  BOOST_CHECK_EQUAL( obtained.size(), expected.size() );
+  for( map<string, string >::const_iterator itr= obtained.begin(),
+	 expecteditr= expected.begin(); 
+       expecteditr != expected.end(); itr++, expecteditr++ ) {
+    BOOST_CHECK_EQUAL( itr->first, expecteditr->first );
+    BOOST_CHECK_EQUAL( itr->second, expecteditr->second );
+  }
+  return;
+}
+
+void checkMatrixMaps( const map<string,TMatrixD>& obtained, 
+		      const map<string,TMatrixD>& expected ) {
+  BOOST_CHECK_EQUAL( obtained.size(), expected.size() );
+  for( map<string,TMatrixD>::const_iterator itr= obtained.begin(),
+	 expitr= expected.begin();
+       expitr != expected.end(); itr++, expitr++ ) {
+    string errorkey= itr->first;
+    string expectederrorkey= expitr->first;
+    BOOST_CHECK_EQUAL( errorkey, expectederrorkey );
+    TMatrixD covm= itr->second;
+    TMatrixD expectedcovm= expitr->second;
+    Int_t nerr= covm.GetNrows();
+    BOOST_CHECK_EQUAL( nerr, expectedcovm.GetNrows() );
+    for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
+      for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
+	BOOST_CHECK_CLOSE( covm(ierr,jerr), expectedcovm(ierr,jerr), 1.0e-4 );
+      }
+    }
+  }
+  return;
+}
 
 // Test fixture for "test.txt":
 class AverageDataParserTestFixture {
@@ -119,7 +152,7 @@ BOOST_AUTO_TEST_CASE( testgetErrors ) {
   BOOST_CHECK_EQUAL( errorsmap.size(), expectederrorsmap.size() );
   for( map<string, vector<double> >::const_iterator itr= errorsmap.begin(),
 	 expecteditr= expectederrorsmap.begin(); 
-       itr != errorsmap.end(); itr++, expecteditr++ ) {
+       expecteditr != expectederrorsmap.end(); itr++, expecteditr++ ) {
     BOOST_CHECK_EQUAL( itr->first, expecteditr->first );
     vector<double> errors= itr->second;
     vector<double> expectederrors= expecteditr->second;
@@ -149,13 +182,7 @@ BOOST_AUTO_TEST_CASE( testgetCovoption ) {
   expectedcovopts["02err2"]= string( "m" );
   expectedcovopts["03err3"]= string( "p" );
   expectedcovopts["04err4"]= string( "f" );
-  BOOST_CHECK_EQUAL( covopts.size(), expectedcovopts.size() );
-  for( map<string, string >::const_iterator itr= covopts.begin(),
-	 expecteditr= expectedcovopts.begin(); 
-       itr != covopts.end(); itr++, expecteditr++ ) {
-    BOOST_CHECK_EQUAL( itr->first, expecteditr->first );
-    BOOST_CHECK_EQUAL( itr->second, expecteditr->second );
-  }
+  checkStringMaps( covopts, expectedcovopts );
 }
 
 BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
@@ -167,13 +194,7 @@ BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
   expectedcorrelations["01err1"]= tmp;
   tmp= "f f f f f f f f f";
   expectedcorrelations["02err2"]= tmp;
-  BOOST_CHECK_EQUAL( correlations.size(), expectedcorrelations.size() );
-  for( map<string, string >::const_iterator itr= correlations.begin(),
-	 expecteditr= expectedcorrelations.begin(); 
-       itr != correlations.end(); itr++, expecteditr++ ) {
-    BOOST_CHECK_EQUAL( itr->first, expecteditr->first );
-    BOOST_CHECK_EQUAL( itr->second, expecteditr->second );
-  }
+  checkStringMaps( correlations, expectedcorrelations );
 }
 
 BOOST_AUTO_TEST_CASE( testgetCovariances ) {
@@ -199,23 +220,7 @@ BOOST_AUTO_TEST_CASE( testgetCovariances ) {
 			 4.06, 8.41, 9.57,
 			 4.62, 9.57, 10.89 };
   expectedCovariances.insert( map<string,TMatrixD>::value_type( "04err4", TMatrixD( 3, 3, matrixErr4 ) ) );
-  BOOST_CHECK_EQUAL( covariances.size(), expectedCovariances.size() );
-  for( map<string,TMatrixD>::const_iterator itr= covariances.begin(),
-	 expitr= expectedCovariances.begin();
-       itr != covariances.end(); itr++, expitr++ ) {
-    string errorkey= itr->first;
-    string expectederrorkey= expitr->first;
-    BOOST_CHECK_EQUAL( errorkey, expectederrorkey );
-    TMatrixD covm= itr->second;
-    TMatrixD expectedcovm= expitr->second;
-    Int_t nerr= covm.GetNrows();
-    BOOST_CHECK_EQUAL( nerr, expectedcovm.GetNrows() );
-    for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
-      for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
-	BOOST_CHECK_CLOSE( covm(ierr,jerr), expectedcovm(ierr,jerr), 1.0e-4 );
-      }
-    }
-  }
+  checkMatrixMaps( covariances, expectedCovariances );
 }
 
 
@@ -232,8 +237,20 @@ BOOST_AUTO_TEST_CASE( testgetSysterrorMatrix ) {
   systerrs4.push_back( 2.9 );
   systerrs4.push_back( 3.3 );
   expectedSysterrmatrix.insert( map<int,vector<double> >::value_type( 4, systerrs4 ) );
+  BOOST_CHECK_EQUAL( systerrmatrix.size(), expectedSysterrmatrix.size() );
+  for( map<int,vector<double> >::const_iterator mapitr= systerrmatrix.begin(),
+	 expmapitr= expectedSysterrmatrix.begin();
+       expmapitr != expectedSysterrmatrix.end(); mapitr++, expmapitr++ ) {
+    int index= mapitr->first;
+    int expectedIndex= expmapitr->first;
+    BOOST_CHECK_EQUAL( index, expectedIndex );
+    vector<double> systerrs= mapitr->second;
+    vector<double> expectedSysterrs= expmapitr->second;
+    for( size_t ierr= 0; ierr < systerrs.size(); ierr++ ) {
+      BOOST_CHECK_CLOSE( systerrs[ierr], expectedSysterrs[ierr], 1.0e-4 );
+    }
+  }
 }
-
 
 BOOST_AUTO_TEST_CASE( testgetReducedCovariances ) {
   map<string,TMatrixD> covariances= parser.getReducedCovariances();
@@ -252,23 +269,7 @@ BOOST_AUTO_TEST_CASE( testgetReducedCovariances ) {
 			 5.76, 9.61, 12.25 };
   expectedCovariances.insert( map<string,TMatrixD>::value_type( "03err3", TMatrixD( 3, 3, matrixErr3 ) ) );
   expectedCovariances.insert( map<string,TMatrixD>::value_type( "04err4", TMatrixD( 3, 3 ) ) );
-  BOOST_CHECK_EQUAL( covariances.size(), expectedCovariances.size() );
-  for( map<string,TMatrixD>::const_iterator itr= covariances.begin(),
-	 expitr= expectedCovariances.begin();
-       itr != covariances.end(); itr++, expitr++ ) {
-    string errorkey= itr->first;
-    string expectederrorkey= expitr->first;
-    BOOST_CHECK_EQUAL( errorkey, expectederrorkey );
-    TMatrixD covm= itr->second;
-    TMatrixD expectedcovm= expitr->second;
-    Int_t nerr= covm.GetNrows();
-    BOOST_CHECK_EQUAL( nerr, expectedcovm.GetNrows() );
-    for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
-      for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
-	BOOST_CHECK_CLOSE( covm(ierr,jerr), expectedcovm(ierr,jerr), 1.0e-4 );
-      }
-    }
-  }
+  checkMatrixMaps( covariances, expectedCovariances );
 }
 
 
@@ -313,7 +314,7 @@ BOOST_AUTO_TEST_CASE( testOptionPercentU ) {
   expectederrors.push_back( 0.343 );
   expectederrors.push_back( 0.38082 );
   expectederrors.push_back( 0.5235 );
-  checkVectorF( obtainederrors, expectederrors );
+  checkVectorD( obtainederrors, expectederrors );
   map<string,TMatrixD> covariancesmap= myparser.getCovariances();
   TMatrixD obtainedcovm= covariancesmap["00stat"];
   double matrixStat[]= { 0.117649, 0.0, 0.0,  0.0, 0.14502387, 
@@ -331,7 +332,7 @@ BOOST_AUTO_TEST_CASE( testOptionGP ) {
   AverageDataParser myparser( names, values, errorsmap, covopts );
   map<string,vector<double> > obtainederrorsmap= myparser.getErrors();
   vector<double> obtainederrors= obtainederrorsmap["02errb"];
-  checkVectorF( obtainederrors, errors );
+  checkVectorD( obtainederrors, errors );
   map<string,TMatrixD> covariancesmap= myparser.getCovariances();
   TMatrixD obtainedcovm= covariancesmap["02errb"];
   double matrixErrb[]= { 0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  
@@ -343,6 +344,13 @@ BOOST_AUTO_TEST_CASE( testOptionGP ) {
   double matrixErrbRed[]= { 0.0, 0.0, 0.0, 0.0, 1.44, 0.0, 0.0, 0.0, 2.8 };
   TMatrixD expectedreducedcovm( 3, 3, matrixErrbRed );
   checkMatrix( obtainedreducedcovm, expectedreducedcovm );
+  map<int,vector<double> > systerrmap= myparser.getSysterrorMatrix();
+  vector<double> systerrs= systerrmap[0];
+  vector<double> expectedSysterrs;
+  expectedSysterrs.push_back( 0.9 );
+  expectedSysterrs.push_back( 0.9 );
+  expectedSysterrs.push_back( 0.9 );
+  checkVectorD( systerrs, expectedSysterrs );
 }
 
 BOOST_AUTO_TEST_CASE( testOptionGPR ) {
@@ -354,7 +362,7 @@ BOOST_AUTO_TEST_CASE( testOptionGPR ) {
   AverageDataParser myparser( names, values, errorsmap, covopts );
   map<string,vector<double> > obtainederrorsmap= myparser.getErrors();
   vector<double> obtainederrors= obtainederrorsmap["03errc"];
-  checkVectorF( obtainederrors, errors );
+  checkVectorD( obtainederrors, errors );
   map<string,TMatrixD> covariancesmap= myparser.getCovariances();
   TMatrixD obtainedcovm= covariancesmap["03errc"];
   double matrixErrc[]= { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 
@@ -366,6 +374,15 @@ BOOST_AUTO_TEST_CASE( testOptionGPR ) {
   double matrixErrbRed[]= { 0.0, 0.0, 0.0, 0.0, 3.742023, 0.0, 0.0, 0.0, 6.286721 };
   TMatrixD expectedreducedcovm( 3, 3, matrixErrbRed );
   checkMatrix( obtainedreducedcovm, expectedreducedcovm );
+
+  map<int,vector<double> > systerrmap= myparser.getSysterrorMatrix();
+  vector<double> systerrs= systerrmap[0];
+  vector<double> expectedSysterrs;
+  expectedSysterrs.push_back( 2.4 );
+  expectedSysterrs.push_back( 2.42239067 );
+  expectedSysterrs.push_back( 2.4419825 );
+  checkVectorD( systerrs, expectedSysterrs );
+
 }
 
 // BOOST_AUTO_TEST_CASE( testErrors ) {

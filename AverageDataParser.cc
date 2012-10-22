@@ -38,11 +38,6 @@ AverageDataParser::AverageDataParser( const vector<string>& names,
 }
 
 
-// Return filename:
-// string AverageDataParser::getFilename() const {
-//   return filename;
-// }
-
 // Return data values:
 vector<double> AverageDataParser::getValues() const {
   return m_values;
@@ -178,6 +173,9 @@ map<string, TMatrixD> AverageDataParser::getCovariances() const {
 map<string, TMatrixD> AverageDataParser::getReducedCovariances() const {
   return m_reducedCovariances;
 }
+map<int,vector<double> > AverageDataParser::getSysterrorMatrix() const {
+  return m_systerrmatrix;
+}
 // Helper to calculate covariances from errors and options u, p, f, a:
 Double_t AverageDataParser::calcCovariance( const string& covopt, 
 					    const vector<double>& errors, 
@@ -200,8 +198,10 @@ Double_t AverageDataParser::calcCovariance( const string& covopt,
 }
 // Calculate covariances:
 void AverageDataParser::makeCovariances() {
-  for( map<string,vector<double> >::const_iterator mapitr= m_errors.begin();
-       mapitr != m_errors.end(); mapitr++ ) {
+  int nsysterr;
+  map<string,vector<double> >::const_iterator mapitr;
+  for( mapitr= m_errors.begin(), nsysterr= 0; 
+       mapitr != m_errors.end(); mapitr++, nsysterr++ ) {
     string errorkey= mapitr->first;
     vector<double> errors= mapitr->second;
     size_t nerr= errors.size();
@@ -210,6 +210,7 @@ void AverageDataParser::makeCovariances() {
     TMatrixD reducedcovm( nerr, nerr );
     if( covopt.find( "gpr" ) != string::npos ) {
       vector<double> ratios;
+      vector<double> systerrs;
       for( size_t ierr= 0; ierr < errors.size(); ierr++ ) {
 	ratios.push_back( errors[ierr]/m_values[ierr] );
       }
@@ -226,10 +227,13 @@ void AverageDataParser::makeCovariances() {
 	    covm(ierr,jerr)= minrelerr*minrelerr*m_values[ierr]*m_values[jerr];
 	  }
 	}
+	systerrs.push_back( minrelerr*m_values[ierr] );
       }
+      m_systerrmatrix[nsysterr]= systerrs;
     }
     else if( covopt.find( "gp" ) != string::npos ) {
       Double_t minerr= *std::min_element( errors.begin(), errors.end() );
+      vector<double> systerrs;
       for( size_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( size_t jerr= 0; jerr < nerr; jerr++ ) {
 	  if( ierr == jerr ) {
@@ -240,7 +244,9 @@ void AverageDataParser::makeCovariances() {
 	    covm(ierr,jerr)= minerr*minerr;
 	  }
 	}
+	systerrs.push_back( minerr );
       }
+      m_systerrmatrix[nsysterr]= systerrs;
     }
     else if( covopt.find( "u" ) != string::npos or
 	     covopt.find( "p" ) != string::npos or
@@ -252,6 +258,7 @@ void AverageDataParser::makeCovariances() {
 	}
       }
       if( covopt.find( "f" ) != string::npos ) {
+	m_systerrmatrix[nsysterr]= errors;
       }
       else {
 	reducedcovm= covm;
@@ -280,6 +287,7 @@ void AverageDataParser::makeCovariances() {
       }
       if( corrstr.find( "f" ) != string::npos and 
 	  corrstr.find( "p" ) == string::npos ) {
+	m_systerrmatrix[nsysterr]= errors;
       }
       else {
 	reducedcovm= covm;
@@ -296,23 +304,3 @@ void AverageDataParser::makeCovariances() {
   
 
 
-map<int,vector<double> > AverageDataParser::getSysterrorMatrix() const {
-  return m_systerrmatrix;
-  // map<int,vector<double> > systerrmatrix;
-  // vector<double> tmp;
-  // tmp.push_back(1.8865);
-  // tmp.push_back(1.8865);
-  // tmp.push_back(1.8865);
-  // systerrmatrix[1] = tmp;
-  // tmp.clear();
-  // tmp.push_back(0.9);
-  // tmp.push_back(0.9);
-  // tmp.push_back(0.9);
-  // systerrmatrix[2] = tmp;
-  // tmp.clear();
-  // tmp.push_back(2.4);
-  // tmp.push_back(2.42239067);
-  // tmp.push_back(2.4419825);
-  // systerrmatrix[3] = tmp;
-  // return systerrmatrix;
-}
