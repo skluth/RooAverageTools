@@ -20,6 +20,7 @@ AverageDataParser::AverageDataParser( const string& fname ) {
   INIParser::INIReader reader( fname );
   makeNames( reader );
   makeValues( reader );
+  makeGroups( reader );
   makeErrorsAndOptions( reader );
   makeCorrelations( reader );
   checkRelativeErrors();
@@ -30,9 +31,10 @@ AverageDataParser::AverageDataParser( const vector<string>& names,
 				      const vector<double>& values,
 				      const map<string,vector<double> >& errors,
 				      const map<string,string>& covopts,
-				      map<string,string> correlations ) :
-  m_names( names ), m_values( values ), m_errors( errors ), 
-  m_covopts( covopts ), m_correlations( correlations ) {
+				      map<string,string> correlations,
+				      vector<string> groups ) :
+  m_names( names ), m_values( values ), m_errors( errors ),
+  m_covopts( covopts ), m_correlations( correlations ), m_groups( groups ) {
   checkRelativeErrors();
   makeCovariances();
 }
@@ -61,6 +63,45 @@ void AverageDataParser::makeNames( const INIParser::INIReader& reader ) {
   m_names= INIParser::getTokens( namestring );
   return;
 }
+
+// Return groups information:
+vector<string> AverageDataParser::getGroups() const {
+  return m_groups;
+}
+TMatrixD AverageDataParser::getGroupMatrix() const {
+  return m_groupmatrix;
+}
+void AverageDataParser::makeGroups( const INIParser::INIReader& reader ) {
+  string groupsstring= reader.get( "Data", "groups", "" );
+  if( !( groupsstring == "" ) ) {
+    vector<string> grouptokens= INIParser::getTokens( groupsstring );
+    for( size_t itok= 0; itok != grouptokens.size(); itok++ ) {
+      m_groups.push_back( grouptokens[itok] );
+    }
+  }
+  else {
+    for( size_t iname= 0; iname < m_names.size(); iname++ ) {
+      m_groups.push_back( "a" );
+    }
+  }
+  vector<string> uniquegroups( m_groups );
+  std::sort( uniquegroups.begin(), uniquegroups.end() );
+  vector<string>::iterator uniqueend= std::unique( uniquegroups.begin(), 
+						   uniquegroups.end() );
+  uniquegroups.resize( uniqueend - uniquegroups.begin() );
+  m_groupmatrix.ResizeTo( uniquegroups.size(), m_groups.size() );
+  for( size_t igroup= 0; igroup < m_groups.size(); igroup++ ) {
+    vector<string>::iterator itr= std::find( uniquegroups.begin(), 
+					     uniquegroups.end(), 
+					     m_groups[igroup] );
+    if( itr != uniquegroups.end() ) {
+      size_t groupindex= itr - uniquegroups.begin();
+      m_groupmatrix( groupindex, igroup )= 1.0;
+    }
+  }
+  return;  
+}
+
 
 // Return map of error values for each error category:
 map<string, vector<double> > AverageDataParser::getErrors() const {
@@ -100,6 +141,7 @@ void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader& reader
   vector<string> removekeys;
   removekeys.push_back( "names" );
   removekeys.push_back( "values" );
+  removekeys.push_back( "groups" );
   for( size_t ikey= 0; ikey != removekeys.size(); ikey++ ) {
     keys.erase( std::remove_if( keys.begin(), keys.end(),
 				Match( removekeys[ikey] ) ),
@@ -302,5 +344,4 @@ void AverageDataParser::makeCovariances() {
   return;
 }
   
-
 
