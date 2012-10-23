@@ -18,11 +18,12 @@ blue::blue(string filename) {
 	covopts=dataparser.getCovoption();
 
 	// lovely ROOT...
-	TMatrixD tmp1(_columnVector(dataparser.getTotalErrors()));
+	TVectorD tmp1( dataparser.getTotalErrors() );
 	totalerrors.ResizeTo(tmp1);
 	totalerrors=tmp1;
 
-	TMatrixD tmp2(_columnVector(dataparser.getValues()));
+	//TMatrixD tmp2(_columnVector(dataparser.getValues()));
+	TVectorD tmp2( dataparser.getValues() );
 	data.ResizeTo(tmp2);
 	data=tmp2;
 
@@ -93,27 +94,28 @@ TMatrixD blue::calcWeightsMatrix() {
 
 double blue::calcAverage(){
 	TMatrixD wm=calcWeightsMatrix();
-	double avg= (wm*data)(0,0);
+	double avg= (wm*data)(0);
 	return avg;
 
 }
 
 double blue::calcChisq(){
-	TMatrixD delta=data - groupmatrix * calcAverage();
-	TMatrixD deltaT;
-	deltaT.ResizeTo(1,dim);
-	deltaT.Transpose(delta);
-	double chisq= (deltaT*inv*delta)(0,0);
-	return chisq;
+  //TVectorD delta= data - groupmatrix * calcAverage();
+	// TMatrixD deltaT;
+	// deltaT.ResizeTo(1,dim);
+	// deltaT.Transpose(delta);
+	// double chisq= (deltaT*inv*delta)(0,0);
+	// return chisq;
+	return -99;
 }
 
 
 
 
 TMatrixD blue::calcPulls(){
-	TMatrixD delta=data - groupmatrix * calcAverage();
+	// TMatrixD delta=data - groupmatrix * calcAverage();
 
-	TMatrixD pulls=delta;
-	pulls/= totalerrors;   // weird: TMatrix knows 'A/=B' but not 'A=C/B'
-	return pulls;
+	// TMatrixD pulls=delta;
+	// pulls/= totalerrors;   // weird: TMatrix knows 'A/=B' but not 'A=C/B'
+	// return pulls;
 }

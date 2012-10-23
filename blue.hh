@@ -71,10 +71,7 @@
 class blue {
 public:
 
-
-
-
-  std::map<std::string, std::vector<double> > errors;
+  std::map<std::string,TVectorD> errors;
   std::vector<std::string> names;
   std::map<std::string, std::string > covopts;
   std::map<std::string, std::vector<double> > correlations;
@@ -82,8 +79,8 @@ public:
   TMatrixD cov;
   TMatrixDSym inv;
   TMatrixD groupmatrix;
-  TMatrixD data;
-  TMatrixD totalerrors;
+  TVectorD data;
+  TVectorD totalerrors;
   
 
   int dim;  // max number of rows/columns
