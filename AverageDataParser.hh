@@ -28,17 +28,15 @@ public:
 
   std::vector<std::string> getNames() const;
   TVectorD getValues() const;
-  //  std::map<std::string, std::vector<double> > getErrors2() const;
   std::map<std::string,TVectorD> getErrors() const;
   std::map<std::string, std::string> getCovoption() const;
   std::map<std::string, std::string> getCorrelations() const;
   TVectorD getTotalErrors() const;
   std::map<std::string, TMatrixD> getCovariances() const;
   std::map<std::string, TMatrixD> getReducedCovariances() const;
-
-  //std::map<int,std::vector<double> > getSysterrorMatrix2() const;
+  TMatrixD getTotalCovariances() const;
+  TMatrixD getTotalReducedCovariances() const;
   std::map<int,TVectorD> getSysterrorMatrix() const;
-
   std::vector<std::string> getGroups() const;
   TMatrixD getGroupMatrix() const;
 
@@ -52,23 +50,19 @@ private:
   void makeCorrelations( const INIParser::INIReader& );
   void makeCovariances();
   Double_t calcCovariance( const std::string& covopt, 
-			   //const std::vector<double>& errors, 
 			   const TVectorD& errors, 
 			   size_t ierr, size_t jerr ) const;
+  TMatrixD sumOverMatrixMap( const std::map<std::string,TMatrixD>& ) const;
 
   std::vector<std::string> m_names;
   TVectorD m_values;
-  //  std::map<std::string,std::vector<double> > m_errors2;
   std::map<std::string,TVectorD> m_errors;
   std::map<std::string,std::string> m_covopts;
   std::map<std::string,std::string> m_correlations;
   std::vector<std::string> m_groups;
   std::map<std::string,TMatrixD> m_covariances;
   std::map<std::string,TMatrixD> m_reducedCovariances;
-
-  //std::map<int,std::vector<double> > m_systerrmatrix2;
   std::map<int,TVectorD> m_systerrmatrix;
-
   TMatrixD m_groupmatrix;
 
 };

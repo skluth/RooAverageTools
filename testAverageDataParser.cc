@@ -226,6 +226,27 @@ BOOST_AUTO_TEST_CASE( testgetReducedCovariances ) {
   checkMatrixMap( covariances, expectedCovariances );
 }
 
+BOOST_AUTO_TEST_CASE( testgetTotalCovariances ) {
+  BOOST_MESSAGE( "testgetTotalCovariances" );
+  TMatrixD totalcov= parser.getTotalCovariances();
+  Double_t data[]= { 9.83, 12.38, 13.3,
+		     12.38, 22.0689, 23.72,
+		     13.3 , 23.72, 29.16 };
+  TMatrixD expectedtc( 3, 3, data );
+  checkMatrix( totalcov, expectedtc );
+}
+
+BOOST_AUTO_TEST_CASE( testgetTotalReducedCovariances ) {
+  BOOST_MESSAGE( "testgetTotalReducedCovariances" );
+  TMatrixD totalredcov= parser.getTotalReducedCovariances();
+  Double_t data[]= { 7.06, 6.97, 6.97,
+		     6.97, 11.4089, 11.3,
+		     6.97, 11.3, 14.66 };
+  TMatrixD expectedtrc( 3, 3, data );
+  checkMatrix( totalredcov, expectedtrc );
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 

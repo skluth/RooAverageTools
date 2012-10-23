@@ -106,9 +106,6 @@ void AverageDataParser::makeGroups( const INIParser::INIReader& reader ) {
 
 
 // Return map of error values for each error category:
-// map<string, vector<double> > AverageDataParser::getErrors2() const {
-//   return m_errors2;
-// }
 map<string,TVectorD> AverageDataParser::getErrors() const {
   return m_errors;
 }
@@ -134,7 +131,6 @@ void AverageDataParser::checkRelativeErrors() {
        mapitr != m_errors.end(); mapitr++ ) {
     string errorkey= mapitr->first;
     if( m_covopts[errorkey].find( "%" ) != string::npos ) {
-      //      vector<double>& errors= mapitr->second;
       TVectorD& errors= mapitr->second;
       for( Int_t ierr= 0; ierr != errors.GetNoElements(); ierr++ ) {
         errors[ierr]*= m_values[ierr] / 100.0;
@@ -168,7 +164,6 @@ void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader& reader
       elements2.push_back( element );
       elements[itok]= element;
     }
-    // m_errors2[key]= elements2;
     m_errors.insert( map<string,TVectorD>::value_type( key, elements ) );
   }
   return;
@@ -188,6 +183,23 @@ TVectorD AverageDataParser::getTotalErrors() const {
     totalerrors[ierr]= sqrt( totalerrors[ierr] );
   }
   return totalerrors;
+}
+
+// Return sums of covariance matrices:
+TMatrixD AverageDataParser::getTotalReducedCovariances() const {
+  return sumOverMatrixMap( m_reducedCovariances );
+}
+TMatrixD AverageDataParser::getTotalCovariances() const {
+  return sumOverMatrixMap( m_covariances );
+}
+TMatrixD AverageDataParser::sumOverMatrixMap( const map<string,TMatrixD>& matrixmap ) const {
+  Int_t ndim= m_values.GetNoElements();
+  TMatrixD total( ndim, ndim );
+  for( map<string,TMatrixD>::const_iterator mapitr= matrixmap.begin();
+       mapitr != matrixmap.end(); mapitr++ ) {
+    total+= mapitr->second;
+  }
+  return total;
 }
 
 // Read detailed correlation information as a string from extra section
@@ -225,9 +237,6 @@ map<string, TMatrixD> AverageDataParser::getCovariances() const {
 map<string, TMatrixD> AverageDataParser::getReducedCovariances() const {
   return m_reducedCovariances;
 }
-// map<int,vector<double> > AverageDataParser::getSysterrorMatrix2() const {
-//   return m_systerrmatrix2;
-// }
 map<int,TVectorD> AverageDataParser::getSysterrorMatrix() const {
   return m_systerrmatrix;
 }
@@ -283,16 +292,13 @@ void AverageDataParser::makeCovariances() {
 	    covm(ierr,jerr)= minrelerr*minrelerr*m_values[ierr]*m_values[jerr];
 	  }
 	}
-	//systerrs2.push_back( minrelerr*m_values[ierr] );
 	systerrs[ierr]= minrelerr*m_values[ierr];
       }
-      //      m_systerrmatrix2[nsysterr]= systerrs2;
       m_systerrmatrix.insert( map<int,TVectorD>::value_type( nsysterr, 
 							     systerrs ) );
     }
     else if( covopt.find( "gp" ) != string::npos ) {
       Double_t minerr= errors.Min();
-      //vector<double> systerrs2;
       TVectorD systerrs( nerr );
       for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
@@ -304,10 +310,8 @@ void AverageDataParser::makeCovariances() {
 	    covm(ierr,jerr)= minerr*minerr;
 	  }
 	}
-	//systerrs2.push_back( minerr );
 	systerrs[ierr]= minerr;
       }
-      //m_systerrmatrix2[nsysterr]= systerrs2;
       m_systerrmatrix.insert( map<int,TVectorD>::value_type( nsysterr, 
 							     systerrs ) );
     }
@@ -321,7 +325,6 @@ void AverageDataParser::makeCovariances() {
 	}
       }
       if( covopt.find( "f" ) != string::npos ) {
-	//m_systerrmatrix[nsysterr]= errors2;
 	m_systerrmatrix.insert( map<int,TVectorD>::value_type( nsysterr, 
 							       errors ) );
       }
@@ -352,7 +355,6 @@ void AverageDataParser::makeCovariances() {
       }
       if( corrstr.find( "f" ) != string::npos and 
 	  corrstr.find( "p" ) == string::npos ) {
-	//m_systerrmatrix[nsysterr]= errors;
 	m_systerrmatrix.insert( map<int,TVectorD>::value_type( nsysterr, 
 							       errors ) );
       }
