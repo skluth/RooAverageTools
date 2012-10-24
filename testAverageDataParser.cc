@@ -11,6 +11,7 @@
 
 #include <TVectorD.h>
 #include <TMatrixD.h>
+#include <TMatrixDSym.h>
 
 // BOOST test stuff:
 #define BOOST_TEST_DYN_LINK
@@ -55,10 +56,10 @@ void checkVectorMap( const map<string,TVectorD>& obtained,
   }
   return;
 }
-void checkMatrixMap( const map<string,TMatrixD>& obtained, 
-		     const map<string,TMatrixD>& expected ) {
+void checkMatrixMap( const map<string,TMatrixDSym>& obtained, 
+		     const map<string,TMatrixDSym>& expected ) {
   BOOST_CHECK_EQUAL( obtained.size(), expected.size() );
-  for( map<string,TMatrixD>::const_iterator itr= obtained.begin(),
+  for( map<string,TMatrixDSym>::const_iterator itr= obtained.begin(),
 	 expitr= expected.begin();
        expitr != expected.end(); itr++, expitr++ ) {
     BOOST_CHECK_EQUAL( itr->first, expitr->first );
@@ -163,28 +164,28 @@ BOOST_AUTO_TEST_CASE( testgetCorrelations ) {
 
 BOOST_AUTO_TEST_CASE( testgetCovariances ) {
   BOOST_MESSAGE( "testgetCovariances" );
-  map<string,TMatrixD> covariances= parser.getCovariances();
-  map<string,TMatrixD> expectedCovariances;
+  map<string,TMatrixDSym> covariances= parser.getCovariances();
+  map<string,TMatrixDSym> expectedCovariances;
   double matrixStat[]= { 0.09, 0.0,  0.0,
 			 0.0, 0.1089, 0.0,
 			 0.0, 0.0, 0.16 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "00stat", TMatrixD( 3, 3, matrixStat ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "00stat", TMatrixDSym( 3, matrixStat ) ) );
   double matrixErr1[]= { 1.21, 1.21, 1.21,
 			 1.21, 1.69, 1.69,
 			 1.21, 1.69, 2.25 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "01err1", TMatrixD( 3, 3, matrixErr1 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "01err1", TMatrixDSym( 3, matrixErr1 ) ) );
   double matrixErr2[]= { 0.81, 1.35, 1.71,
 			 1.35, 2.25, 2.85,
 			 1.71, 2.85, 3.61 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "02err2", TMatrixD( 3, 3, matrixErr2 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "02err2", TMatrixDSym( 3, matrixErr2 ) ) );
   double matrixErr3[]= { 5.76, 5.76, 5.76 ,
 			 5.76, 9.61, 9.61,
 			 5.76, 9.61, 12.25 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "03err3", TMatrixD( 3, 3, matrixErr3 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "03err3", TMatrixDSym( 3, matrixErr3 ) ) );
   double matrixErr4[]= { 1.96, 4.06, 4.62,
 			 4.06, 8.41, 9.57,
 			 4.62, 9.57, 10.89 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "04err4", TMatrixD( 3, 3, matrixErr4 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "04err4", TMatrixDSym( 3, matrixErr4 ) ) );
   checkMatrixMap( covariances, expectedCovariances );
 }
 
@@ -207,22 +208,22 @@ BOOST_AUTO_TEST_CASE( testgetSysterrorMatrix ) {
 
 BOOST_AUTO_TEST_CASE( testgetReducedCovariances ) {
   BOOST_MESSAGE( "testgetReducedCovariances" );
-  map<string,TMatrixD> covariances= parser.getReducedCovariances();
-  map<string,TMatrixD> expectedCovariances;
+  map<string,TMatrixDSym> covariances= parser.getReducedCovariances();
+  map<string,TMatrixDSym> expectedCovariances;
   double matrixStat[]= { 0.09, 0.0,  0.0,
 			 0.0, 0.1089, 0.0,
 			 0.0, 0.0, 0.16 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "00stat", TMatrixD( 3, 3, matrixStat ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "00stat", TMatrixDSym( 3, matrixStat ) ) );
   double matrixErr1[]= { 1.21, 1.21, 1.21,
 			 1.21, 1.69, 1.69,
 			 1.21, 1.69, 2.25 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "01err1", TMatrixD( 3, 3, matrixErr1 ) ) );
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "02err2", TMatrixD( 3, 3 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "01err1", TMatrixDSym( 3, matrixErr1 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "02err2", TMatrixDSym( 3 ) ) );
   double matrixErr3[]= { 5.76, 5.76, 5.76 ,
 			 5.76, 9.61, 9.61,
 			 5.76, 9.61, 12.25 };
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "03err3", TMatrixD( 3, 3, matrixErr3 ) ) );
-  expectedCovariances.insert( map<string,TMatrixD>::value_type( "04err4", TMatrixD( 3, 3 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "03err3", TMatrixDSym( 3, matrixErr3 ) ) );
+  expectedCovariances.insert( map<string,TMatrixDSym>::value_type( "04err4", TMatrixDSym( 3 ) ) );
   checkMatrixMap( covariances, expectedCovariances );
 }
 
@@ -282,11 +283,11 @@ BOOST_AUTO_TEST_CASE( testOptionPercentU ) {
   Double_t datastat[]= { 0.343, 0.38082, 0.5235 };
   TVectorD expectederrors( 3, datastat );
   checkVector( obtainederrors, expectederrors );
-  map<string,TMatrixD> covariancesmap= myparser.getCovariances();
-  TMatrixD obtainedcovm= covariancesmap["00stat"];
+  map<string,TMatrixDSym> covariancesmap= myparser.getCovariances();
+  TMatrixDSym obtainedcovm= covariancesmap["00stat"];
   double matrixStat[]= { 0.117649, 0.0, 0.0,  0.0, 0.14502387, 
 			 0.0, 0.0,  0.0,  0.27405225 };
-  TMatrixD expectedcovm( 3, 3, matrixStat );
+  TMatrixDSym expectedcovm( 3, matrixStat );
   checkMatrix( obtainedcovm, expectedcovm );
 }
 
@@ -300,16 +301,16 @@ BOOST_AUTO_TEST_CASE( testOptionGP ) {
   map<string,TVectorD> obtainederrorsmap= myparser.getErrors();
   TVectorD obtainederrors= obtainederrorsmap["02errb"];
   checkVector( obtainederrors, errors );
-  map<string,TMatrixD> covariancesmap= myparser.getCovariances();
-  TMatrixD obtainedcovm= covariancesmap["02errb"];
+  map<string,TMatrixDSym> covariancesmap= myparser.getCovariances();
+  TMatrixDSym obtainedcovm= covariancesmap["02errb"];
   double matrixErrb[]= { 0.81,  0.81,  0.81,  0.81,  2.25,  0.81, 0.81,  
 			 0.81,  3.61 };
-  TMatrixD expectedcovm( 3, 3, matrixErrb );
+  TMatrixDSym expectedcovm( 3, matrixErrb );
   checkMatrix( obtainedcovm, expectedcovm );
-  map<string,TMatrixD> reducedcovariancesmap= myparser.getReducedCovariances();
-  TMatrixD obtainedreducedcovm= reducedcovariancesmap["02errb"];
+  map<string,TMatrixDSym> reducedcovariancesmap= myparser.getReducedCovariances();
+  TMatrixDSym obtainedreducedcovm= reducedcovariancesmap["02errb"];
   double matrixErrbRed[]= { 0.0, 0.0, 0.0, 0.0, 1.44, 0.0, 0.0, 0.0, 2.8 };
-  TMatrixD expectedreducedcovm( 3, 3, matrixErrbRed );
+  TMatrixDSym expectedreducedcovm( 3, matrixErrbRed );
   checkMatrix( obtainedreducedcovm, expectedreducedcovm );
   map<int,TVectorD> systerrmap= myparser.getSysterrorMatrix();
   TVectorD systerrs= systerrmap[0];
@@ -328,16 +329,16 @@ BOOST_AUTO_TEST_CASE( testOptionGPR ) {
   map<string,TVectorD> obtainederrorsmap= myparser.getErrors();
   TVectorD obtainederrors= obtainederrorsmap["03errc"];
   checkVector( obtainederrors, errors );
-  map<string,TMatrixD> covariancesmap= myparser.getCovariances();
-  TMatrixD obtainedcovm= covariancesmap["03errc"];
+  map<string,TMatrixDSym> covariancesmap= myparser.getCovariances();
+  TMatrixDSym obtainedcovm= covariancesmap["03errc"];
   double matrixErrc[]= { 5.76, 5.81373761, 5.86075802,  5.81373761, 9.61, 
 			 5.91543564, 5.86075802, 5.91543564, 12.25 };
-  TMatrixD expectedcovm( 3, 3, matrixErrc );
+  TMatrixDSym expectedcovm( 3, matrixErrc );
   checkMatrix( obtainedcovm, expectedcovm );
-  map<string,TMatrixD> reducedcovariancesmap= myparser.getReducedCovariances();
-  TMatrixD obtainedreducedcovm= reducedcovariancesmap["03errc"];
+  map<string,TMatrixDSym> reducedcovariancesmap= myparser.getReducedCovariances();
+  TMatrixDSym obtainedreducedcovm= reducedcovariancesmap["03errc"];
   double matrixErrcRed[]= { 0.0, 0.0, 0.0, 0.0, 3.742023, 0.0, 0.0, 0.0, 6.286721 };
-  TMatrixD expectedreducedcovm( 3, 3, matrixErrcRed );
+  TMatrixDSym expectedreducedcovm( 3, matrixErrcRed );
   checkMatrix( obtainedreducedcovm, expectedreducedcovm );
   map<int,TVectorD> systerrmap= myparser.getSysterrorMatrix();
   TVectorD systerrs= systerrmap[0];

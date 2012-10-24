@@ -7,10 +7,15 @@
 
 #include "TVectorD.h"
 #include "TMatrixD.h"
+#include "TMatrixDSym.h"
 
 namespace INIParser {
   class INIReader;
 }
+
+typedef std::map<std::string,TMatrixDSym> MatrixMap;
+typedef std::map<std::string,TVectorD> VectorMap;
+typedef std::map<std::string,std::string> StringMap;
 
 class AverageDataParser {
 
@@ -19,23 +24,23 @@ public:
   AverageDataParser( const std::string& fname );
   AverageDataParser( const std::vector<std::string>& names,
 		     const TVectorD& values,
-		     const std::map<std::string,TVectorD>& errors,
-		     const std::map<std::string,std::string>& covopts,
-		     std::map<std::string,std::string> correlations=
-		     std::map<std::string,std::string>(),
+		     const VectorMap& errors,
+		     const StringMap& covopts,
+		     StringMap correlations=
+		     StringMap(),
 		     std::vector<std::string> groups= 
 		     std::vector<std::string>() );
 
   std::vector<std::string> getNames() const;
   TVectorD getValues() const;
-  std::map<std::string,TVectorD> getErrors() const;
+  VectorMap getErrors() const;
   std::map<std::string, std::string> getCovoption() const;
   std::map<std::string, std::string> getCorrelations() const;
   TVectorD getTotalErrors() const;
-  std::map<std::string, TMatrixD> getCovariances() const;
-  std::map<std::string, TMatrixD> getReducedCovariances() const;
-  TMatrixD getTotalCovariances() const;
-  TMatrixD getTotalReducedCovariances() const;
+  MatrixMap getCovariances() const;
+  MatrixMap getReducedCovariances() const;
+  TMatrixDSym getTotalCovariances() const;
+  TMatrixDSym getTotalReducedCovariances() const;
   std::map<int,TVectorD> getSysterrorMatrix() const;
   std::vector<std::string> getGroups() const;
   TMatrixD getGroupMatrix() const;
@@ -52,16 +57,16 @@ private:
   Double_t calcCovariance( const std::string& covopt, 
 			   const TVectorD& errors, 
 			   size_t ierr, size_t jerr ) const;
-  TMatrixD sumOverMatrixMap( const std::map<std::string,TMatrixD>& ) const;
+  TMatrixDSym sumOverMatrixMap( const MatrixMap& ) const;
 
   std::vector<std::string> m_names;
   TVectorD m_values;
-  std::map<std::string,TVectorD> m_errors;
-  std::map<std::string,std::string> m_covopts;
-  std::map<std::string,std::string> m_correlations;
+  VectorMap m_errors;
+  StringMap m_covopts;
+  StringMap m_correlations;
   std::vector<std::string> m_groups;
-  std::map<std::string,TMatrixD> m_covariances;
-  std::map<std::string,TMatrixD> m_reducedCovariances;
+  MatrixMap m_covariances;
+  MatrixMap m_reducedCovariances;
   std::map<int,TVectorD> m_systerrmatrix;
   TMatrixD m_groupmatrix;
 
