@@ -30,8 +30,8 @@ AverageDataParser::AverageDataParser( const string& fname ) {
 AverageDataParser::AverageDataParser( const vector<string>& names,
 				      const TVectorD& values,
 				      const VectorMap& errors,
-				      const map<string,string>& covopts,
-				      map<string,string> correlations,
+				      const StringMap& covopts,
+				      StringMap correlations,
 				      vector<string> groups ) :
   m_names( names ), m_values( values ), m_errors( errors ),
   m_covopts( covopts ), m_correlations( correlations ), m_groups( groups ) {
@@ -206,7 +206,7 @@ TMatrixDSym AverageDataParser::sumOverMatrixMap( const MatrixMap& matrixmap ) co
 // Read detailed correlation information as a string from extra section
 // "Covariances" if indicated by option in "Data" section.
 // On failure the map containes empty strings.
-map<string,string> AverageDataParser::getCorrelations() const {
+StringMap AverageDataParser::getCorrelations() const {
   return m_correlations;
 }
 void AverageDataParser::makeCorrelations( const INIParser::INIReader& reader ) {
