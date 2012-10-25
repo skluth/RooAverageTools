@@ -5,6 +5,7 @@
 #include "AverageDataParser.hh"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -85,6 +86,7 @@ class AverageDataParserTestFixture {
 public:
   AverageDataParserTestFixture() : parser( "test.txt" ) {}
   AverageDataParser parser;
+  std::ostringstream osst;
 };
 
 // Declare test suite name and fixture class to BOOST:
@@ -229,24 +231,147 @@ BOOST_AUTO_TEST_CASE( testgetReducedCovariances ) {
 
 BOOST_AUTO_TEST_CASE( testgetTotalCovariances ) {
   BOOST_MESSAGE( "testgetTotalCovariances" );
-  TMatrixD totalcov= parser.getTotalCovariances();
+  TMatrixDSym totalcov= parser.getTotalCovariances();
   Double_t data[]= { 9.83, 12.38, 13.3,
 		     12.38, 22.0689, 23.72,
 		     13.3 , 23.72, 29.16 };
-  TMatrixD expectedtc( 3, 3, data );
+  TMatrixDSym expectedtc( 3, data );
   checkMatrix( totalcov, expectedtc );
 }
 
 BOOST_AUTO_TEST_CASE( testgetTotalReducedCovariances ) {
   BOOST_MESSAGE( "testgetTotalReducedCovariances" );
-  TMatrixD totalredcov= parser.getTotalReducedCovariances();
+  TMatrixDSym totalredcov= parser.getTotalReducedCovariances();
   Double_t data[]= { 7.06, 6.97, 6.97,
 		     6.97, 11.4089, 11.3,
 		     6.97, 11.3, 14.66 };
-  TMatrixD expectedtrc( 3, 3, data );
+  TMatrixDSym expectedtrc( 3, data );
   checkMatrix( totalredcov, expectedtrc );
 }
 
+BOOST_AUTO_TEST_CASE( testprintFilename ) {
+  BOOST_MESSAGE( "testprintFilename" );
+  parser.printFilename( osst );
+  string obtained= osst.str();
+  string expected= "AverageDataParser: input from test.txt\n";  
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintNames ) {
+  BOOST_MESSAGE( "testprintNames" );
+  parser.printNames( osst );
+  string obtained= osst.str();
+  string expected= " Variables:       val1       val2       val3\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintValues ) {
+  BOOST_MESSAGE( "testprintValues" );
+  parser.printValues( osst );
+  string obtained= osst.str();
+  string expected= "    Values:   171.5000   173.1000   174.5000\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintErrors ) {
+  BOOST_MESSAGE( "testprintErrors" );
+  parser.printErrors( osst );
+  string obtained= osst.str();
+  string expected= 
+    "      stat:     0.3000     0.3300     0.4000 c\n"
+    "      err1:     1.1000     1.3000     1.5000 m\n"
+    "      err2:     0.9000     1.5000     1.9000 m\n"
+    "      err3:     2.4000     3.1000     3.5000 p\n"
+    "      err4:     1.4000     2.9000     3.3000 f\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintTotalErrors ) {
+  BOOST_MESSAGE( "testprintTotalErrors" );
+  parser.printTotalErrors( osst );
+  string obtained= osst.str();
+  string expected= "     total:     3.1353     4.6978     5.4000\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintCorrelations ) {
+  BOOST_MESSAGE( "testprintCorrelations" );
+  parser.printCorrelations( osst );
+  string obtained= osst.str();
+  string expected= 
+    "Correlations:\n\n"
+    " stat:\n"
+    " 1. 0. 0.\n"
+    " 0. 1. 0.\n"
+    " 0. 0. 1.\n\n"
+    " err1:\n"
+    " p p p\n"
+    " p p p\n"
+    " p p p\n\n"
+    " err2:\n"
+    " f f f\n"
+    " f f f\n"
+    " f f f\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintCovariances ) {
+  BOOST_MESSAGE( "testprintCovariances" );
+  parser.printCovariances( osst, std::ios::scientific, 3 );
+  string obtained= osst.str();
+  string expected=
+    "Covariances:\n\n"
+    " stat:\n"
+    "  9.000e-02  0.000e+00  0.000e+00\n"
+    "  0.000e+00  1.089e-01  0.000e+00\n"
+    "  0.000e+00  0.000e+00  1.600e-01\n\n"
+    " err1:\n"
+    "  1.210e+00  1.210e+00  1.210e+00\n"
+    "  1.210e+00  1.690e+00  1.690e+00\n"
+    "  1.210e+00  1.690e+00  2.250e+00\n\n"
+    " err2:\n"
+    "  8.100e-01  1.350e+00  1.710e+00\n"
+    "  1.350e+00  2.250e+00  2.850e+00\n"
+    "  1.710e+00  2.850e+00  3.610e+00\n\n"
+    " err3:\n"
+    "  5.760e+00  5.760e+00  5.760e+00\n"
+    "  5.760e+00  9.610e+00  9.610e+00\n"
+    "  5.760e+00  9.610e+00  1.225e+01\n\n"
+    " err4:\n"
+    "  1.960e+00  4.060e+00  4.620e+00\n"
+    "  4.060e+00  8.410e+00  9.570e+00\n"
+    "  4.620e+00  9.570e+00  1.089e+01\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintCorrelationMatrices ) {
+  BOOST_MESSAGE( "testprintCorrelationMatrices" );
+  parser.printCorrelationMatrices( osst );
+  string obtained= osst.str();
+  string expected=
+    "Correlation matrices:\n\n"
+    " stat:\n"
+    "  1.00  0.00  0.00\n"
+    "  0.00  1.00  0.00\n"
+    "  0.00  0.00  1.00\n\n"
+    " err1:\n"
+    "  1.00  0.85  0.73\n"
+    "  0.85  1.00  0.87\n"
+    "  0.73  0.87  1.00\n\n"
+    " err2:\n"
+    "  1.00  1.00  1.00\n"
+    "  1.00  1.00  1.00\n"
+    "  1.00  1.00  1.00\n\n"
+    " err3:\n"
+    "  1.00  0.77  0.69\n"
+    "  0.77  1.00  0.89\n"
+    "  0.69  0.89  1.00\n\n"
+    " err4:\n"
+    "  1.00  1.00  1.00\n"
+    "  1.00  1.00  1.00\n"
+    "  1.00  1.00  1.00\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

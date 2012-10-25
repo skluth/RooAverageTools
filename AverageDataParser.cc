@@ -6,25 +6,26 @@
 #include <utility>
 #include <algorithm>
 #include <list>
-#include <iostream>
 #include <math.h>
+#include <iomanip>
 
 // Commonly used identifiers
 using std::string;
 using std::vector;
 using std::map;
+using std::endl;
 using namespace INIParser;
 
 // Ctors:
-AverageDataParser::AverageDataParser( const string& fname ) {
+AverageDataParser::AverageDataParser( const string& fname ) 
+  : m_filename( fname ) {
   INIParser::INIReader reader( fname );
   makeNames( reader );
   makeValues( reader );
   makeGroups( reader );
   makeErrorsAndOptions( reader );
   makeCorrelations( reader );
-  checkRelativeErrors();
-  makeCovariances();
+  initialise();
 }
 
 AverageDataParser::AverageDataParser( const vector<string>& names,
@@ -33,12 +34,18 @@ AverageDataParser::AverageDataParser( const vector<string>& names,
 				      const StringMap& covopts,
 				      StringMap correlations,
 				      vector<string> groups ) :
-  m_names( names ), m_values( values ), m_errors( errors ),
-  m_covopts( covopts ), m_correlations( correlations ), m_groups( groups ) {
-  checkRelativeErrors();
-  makeCovariances();
+  m_filename( "NONE" ), m_names( names ), m_values( values ), 
+  m_errors( errors ), m_covopts( covopts ), m_correlations( correlations ), 
+  m_groups( groups ) {
+  initialise();
 }
 
+void AverageDataParser::initialise() {
+  checkRelativeErrors();
+  makeCovariances();
+  makeTotalErrors();
+  makeGroupMatrix();  
+}
 
 // Return data values:
 TVectorD AverageDataParser::getValues() const {
@@ -86,11 +93,14 @@ void AverageDataParser::makeGroups( const INIParser::INIReader& reader ) {
       m_groups.push_back( "a" );
     }
   }
+}
+void AverageDataParser::makeGroupMatrix() {
   vector<string> uniquegroups( m_groups );
   std::sort( uniquegroups.begin(), uniquegroups.end() );
   vector<string>::iterator uniqueend= std::unique( uniquegroups.begin(), 
 						   uniquegroups.end() );
   uniquegroups.resize( uniqueend - uniquegroups.begin() );
+  m_numberOfGroups= uniquegroups.size();
   m_groupmatrix.ResizeTo( m_groups.size(), uniquegroups.size() );
   for( size_t igroup= 0; igroup < m_groups.size(); igroup++ ) {
     vector<string>::iterator itr= std::find( uniquegroups.begin(), 
@@ -157,12 +167,12 @@ void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader&
     string covopt= elementtokens.back();
     m_covopts[key]= covopt;
     elementtokens.pop_back();
-    vector<double> elements2;
+    //    vector<double> elements2;
     size_t ntok= elementtokens.size();
     TVectorD elements( ntok );
     for( size_t itok= 0; itok != ntok; itok++ ) {
       double element= INIParser::stringToType( elementtokens[itok], 0.0 );      
-      elements2.push_back( element );
+      //      elements2.push_back( element );
       elements[itok]= element;
     }
     m_errors.insert( VectorMap::value_type( key, elements ) );
@@ -172,18 +182,21 @@ void AverageDataParser::makeErrorsAndOptions( const INIParser::INIReader&
 
 // Return total errors for each variable:
 TVectorD AverageDataParser::getTotalErrors() const {
-  TVectorD totalerrors( m_values.GetNoElements() );
+  return m_totalerrors;
+}
+void AverageDataParser::makeTotalErrors() {
+  m_totalerrors.ResizeTo( m_values.GetNoElements() );
   for( VectorMap::const_iterator itr= m_errors.begin(); 
        itr != m_errors.end(); itr++ ) {
     const TVectorD& errors= itr->second;
     for( Int_t ierr= 0; ierr < errors.GetNoElements(); ierr++ ) {
-      totalerrors[ierr]+= errors[ierr]*errors[ierr];
+      m_totalerrors[ierr]+= errors[ierr]*errors[ierr];
     }
   }
-  for( Int_t ierr= 0; ierr < totalerrors.GetNoElements(); ierr++ ) {
-    totalerrors[ierr]= sqrt( totalerrors[ierr] );
+  for( Int_t ierr= 0; ierr < m_totalerrors.GetNoElements(); ierr++ ) {
+    m_totalerrors[ierr]= sqrt( m_totalerrors[ierr] );
   }
-  return totalerrors;
+  return;
 }
 
 // Return sums of covariance matrices:
@@ -205,7 +218,7 @@ TMatrixDSym AverageDataParser::sumOverMatrixMap( const MatrixMap& matrixmap ) co
 
 // Read detailed correlation information as a string from extra section
 // "Covariances" if indicated by option in "Data" section.
-// On failure the map containes empty strings.
+// On failure the map contains empty strings.
 StringMap AverageDataParser::getCorrelations() const {
   return m_correlations;
 }
@@ -274,12 +287,12 @@ void AverageDataParser::makeCovariances() {
     TMatrixDSym covm( nerr );
     TMatrixDSym reducedcovm( nerr );
     if( covopt.find( "gpr" ) != string::npos ) {
-      vector<double> ratios;
+      TVectorD ratios( nerr );
       TVectorD systerrs( nerr );
       for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
-	ratios.push_back( errors[ierr]/m_values[ierr] );
+      	ratios[ierr]= errors[ierr]/m_values[ierr];
       }
-      Double_t minrelerr= *std::min_element( ratios.begin(), ratios.end() );
+      Double_t minrelerr= ratios.Min();
       for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
 	  if( ierr == jerr ) {
@@ -337,8 +350,8 @@ void AverageDataParser::makeCovariances() {
       vector<string> corrtokens= INIParser::getTokens( corrstr );
       for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
-	  Double_t corr= INIParser::stringToType( corrtokens[ierr*nerr+jerr], 
-						  0.0 );
+	  Double_t corr= 
+	    INIParser::stringToType( corrtokens.at( ierr*nerr+jerr ), 0.0 );
 	  covm(ierr,jerr)= corr*errors[ierr]*errors[jerr];
 	}
       }
@@ -349,7 +362,7 @@ void AverageDataParser::makeCovariances() {
       vector<string> corrtokens= INIParser::getTokens( corrstr );
       for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
 	for( Int_t jerr= 0; jerr < nerr; jerr++ ) {
-	  covm(ierr,jerr)= calcCovariance( corrtokens[ierr*nerr+jerr],
+	  covm(ierr,jerr)= calcCovariance( corrtokens.at( ierr*nerr+jerr ), 
 					   errors, ierr, jerr );
 	}
       }
@@ -370,5 +383,148 @@ void AverageDataParser::makeCovariances() {
   }
   return;
 }
-  
 
+
+string stripLeadingDigits( const string& word ) {
+  size_t iposalpha= 0;
+  for( size_t ipos= 0; ipos < word.size(); ipos++ ) {
+    if( isalpha( word[ipos] ) ) {
+      iposalpha= ipos;
+      break;
+    }
+  }
+  return word.substr( iposalpha );
+}  
+
+
+void AverageDataParser::printFilename( std::ostream& ost ) const {
+  ost << "AverageDataParser: input from " << m_filename << endl;
+}
+void AverageDataParser::printNames( std::ostream& ost ) const {
+  ost << std::setw(11) << "Variables:";
+  for( size_t iname= 0; iname < m_names.size(); iname++ ) {
+    ost << " " << std::setw(10) << m_names[iname];
+  }
+  ost << endl;
+}
+void AverageDataParser::printGroups( std::ostream& ost ) const {
+  ost << std::setw(11) << "Groups:";
+  for( size_t igroup= 0; igroup < m_groups.size(); igroup++ ) {
+    ost << " " << std::setw(10) << m_groups[igroup];
+  }
+  ost << endl;
+}
+void AverageDataParser::printValues( std::ostream& ost ) const {
+  ost << std::setw(11) << "Values:";
+  ost.precision( 4 );
+  ost.setf( std::ios::fixed, std::ios::floatfield );
+  for( Int_t ival= 0; ival < m_values.GetNoElements(); ival++ ) {
+    ost << " " << std::setw(10) << m_values[ival];
+  }
+  ost << endl;
+}
+void AverageDataParser::printErrors( std::ostream& ost ) const {
+  ost.precision( 4 );
+  ost.setf( std::ios::fixed, std::ios::floatfield );
+  for( VectorMap::const_iterator mapitr= m_errors.begin();
+       mapitr != m_errors.end(); mapitr++ ) {
+    string key= mapitr->first;
+    ost << std::setw(11) << stripLeadingDigits( key )+":";
+    TVectorD errors= mapitr->second;
+    for( Int_t ierr= 0; ierr < errors.GetNoElements(); ierr++ ) {
+      ost << " " << std::setw(10) << errors[ierr];
+    }
+    ost << " " << (m_covopts.find( key ))->second << endl;
+  }
+}
+void AverageDataParser::printTotalErrors( std::ostream& ost ) const {
+  ost.precision( 4 );
+  ost.setf( std::ios::fixed, std::ios::floatfield );
+  ost << std::setw(11) << "total:";
+  for( Int_t ierr= 0; ierr < m_totalerrors.GetNoElements(); ierr++ ) {
+    ost << " " << std::setw(10) << m_totalerrors[ierr];
+  }
+  ost << endl;
+}
+void AverageDataParser::printCorrelations( std::ostream& ost ) const {
+  ost << "Correlations:" << endl;
+  for( StringMap::const_iterator mapitr= m_correlations.begin();
+       mapitr != m_correlations.end(); mapitr++ ) {
+    string key= mapitr->first;
+    ost << "\n " << stripLeadingDigits( key )+":" << endl;
+    string correlations= mapitr->second;
+    vector<string> corrtokens= INIParser::getTokens( correlations );
+    size_t nerr= m_names.size();
+    for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+      for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	ost << " " << corrtokens.at( ierr*nerr+jerr );
+      }
+      ost << endl;
+    }
+  }
+}
+void AverageDataParser::printCovariances( std::ostream& ost,
+					  std::ios_base::fmtflags flag,
+					  size_t prec ) const {
+  ost << "Covariances:" << endl;
+  ost.setf( flag, std::ios::floatfield );
+  ost.precision( prec );
+  size_t width= 5;
+  if( flag == std::ios_base::fixed ) {
+    width= prec+4;
+  }
+  else if( flag == std::ios_base::scientific ) {
+    width= prec+7;
+  }
+  for( MatrixMap::const_iterator mapitr= m_covariances.begin();
+       mapitr != m_covariances.end(); mapitr++ ) {
+    string key= mapitr->first;
+    ost << "\n " << stripLeadingDigits( key )+":" << endl;
+    TMatrixDSym covm= mapitr->second;
+    size_t nerr= covm.GetNrows();
+    for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+      for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	ost << " " << std::setw( width ) << covm( ierr, jerr );
+      }
+      ost << endl;
+    }
+  }
+}
+void AverageDataParser::printCorrelationMatrices( std::ostream& ost )const {
+  ost << "Correlation matrices:" << endl;
+  ost.setf( std::ios::fixed, std::ios::floatfield );
+  ost.precision( 2 );
+  for( MatrixMap::const_iterator mapitr= m_covariances.begin();
+       mapitr != m_covariances.end(); mapitr++ ) {
+    string key= mapitr->first;
+    ost << "\n " << stripLeadingDigits( key )+":" << endl;
+    TMatrixDSym covm= mapitr->second;
+    size_t nerr= covm.GetNrows();
+    for( size_t ierr= 0; ierr < nerr; ierr++ ) {
+      for( size_t jerr= 0; jerr < nerr; jerr++ ) {
+	Double_t corr= covm( ierr, jerr )/sqrt( covm( ierr, ierr )*covm( jerr, jerr ) );
+	ost << " " << std::setw( 5 ) << corr;
+      }
+      ost << endl;
+    }
+  }
+}
+
+
+
+void AverageDataParser::printInputs( std::ostream& ost ) const {
+  printFilename( ost );
+  printNames( ost );
+  if( m_numberOfGroups > 0 ) {
+    printGroups( ost );
+  }
+  printValues( ost );
+  printErrors( ost );
+  printTotalErrors( ost );
+  if( m_correlations.size() > 0 ) {
+    printCorrelations( ost );
+  }
+  printCovariances( ost );
+  printCorrelationMatrices( ost );
+  return;
+}
