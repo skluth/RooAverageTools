@@ -28,71 +28,46 @@ using std::vector;
 // Test fixture for all tests:
 class BlueTestFixture {
 public:
-  blueTestFixture() : blueObject( "filename" ) {
-    BOOST_MESSAGE( "Create blueTestFixture" );
-  }
-  virtual ~blueTestFixture() {
-    BOOST_MESSAGE( "Tear down blueTestFixture");
-  }
-  blue blueObject;
+  BlueTestFixture() : blue( "test.txt" ) {}
+  Blue blue;
 };
 
 // Declare test suite name and fixture class to BOOST:
-BOOST_FIXTURE_TEST_SUITE( bluesuite, blueTestFixture )
+BOOST_FIXTURE_TEST_SUITE( bluesuite, BlueTestFixture )
 
 // Test cases:
 
-BOOST_AUTO_TEST_CASE( testCalcWeightsMatrix ) {
-	BOOST_MESSAGE("Testing >>>>>>>>>> blue::calcWeightsMatrix()");
-
-	double expected[] = { 1.3390306603614366, -0.16163492961906992, -0.17739573074236697 };
-
-	TMatrixD result = blueObject.calcWeightsMatrix();
-	for (int i = 0; i < 3; i++) {
-
-		BOOST_CHECK_CLOSE_FRACTION(expected[i], result(0,i), 1e-6);
-	}
-
+BOOST_AUTO_TEST_CASE( testcalcWeightsMatrix ) {
+  BOOST_MESSAGE( "testcalcWeightsMatrix" );
+  double expected[]= { 1.33903066, -0.16163493, -0.17739573 };
+  TMatrixD result= blue.calcWeightsMatrix();
+  for( int i = 0; i < 3; i++) {
+    BOOST_CHECK_CLOSE( expected[i], result(0,i), 1.0e-4 );
+  }  
 }
 
-BOOST_AUTO_TEST_CASE( testCalcAverage ) {
-	BOOST_MESSAGE("Testing >>>>>>>>>> blue::calcAverage()");
-
-	double expected = 170.70919692;
-
-	double result = blueObject.calcAverage();
-
-	BOOST_CHECK_CLOSE_FRACTION(expected, result, 1e-9);
-
+BOOST_AUTO_TEST_CASE( testcalcAverage ) {
+  BOOST_MESSAGE( "testcalcAverage" );
+  Double_t expected= 170.709197;
+  TVectorD result= blue.calcAverage();
+  BOOST_CHECK_CLOSE( expected, result[0], 1.0e-4 );
 }
 
-BOOST_AUTO_TEST_CASE( testCalcChisq ) {
-	BOOST_MESSAGE("Testing >>>>>>>>>> blue::calcChisq()");
-
-	double expected = 0.770025093468;
-
-	double result = blueObject.calcChisq();
-
-	BOOST_CHECK_CLOSE_FRACTION(expected, result, 1e-8);
-
+BOOST_AUTO_TEST_CASE( testcalcChisq ) {
+  BOOST_MESSAGE( "testcalcChisq" );
+  double obtained= blue.calcChisq();
+  double expected= 0.770025;
+  BOOST_CHECK_CLOSE( obtained, expected, 1.0e-4 );
 }
 
-BOOST_AUTO_TEST_CASE( testCalcPulls ) {
-	BOOST_MESSAGE("Testing >>>>>>>>>> blue::calcPulls()");
-
-	double totalErrdata1[] = { 1, 1, 1 };
-	blueObject.totalerrors.ResizeTo(3, 1);
-	blueObject.totalerrors.SetMatrixArray(totalErrdata1);
-	TMatrixD result1 = blueObject.calcPulls();
-
-	double totalErrdata2[] = { 3, 3, 3 };
-	blueObject.totalerrors.SetMatrixArray(totalErrdata2);
-	TMatrixD result2 = blueObject.calcPulls();
-
-	for (int i = 0; i < 3; i++) {
-		BOOST_CHECK_CLOSE_FRACTION(result1(1,0), 3.0*result2(1,0), 1e-300);
-	}
-
+BOOST_AUTO_TEST_CASE( testcalcPulls ) {
+  BOOST_MESSAGE( "testcalcPulls" );
+  TVectorD obtained= blue.calcPulls();
+  Double_t expected[]= { 0.25222701, 0.5089246205, 0.70200057 };
+  for( int i= 0; i < 3; i++ ) {
+    BOOST_CHECK_CLOSE( obtained[i], expected[i], 1.0e-4 );
+  }
 }
+
 BOOST_AUTO_TEST_SUITE_END()
 
