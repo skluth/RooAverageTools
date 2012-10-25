@@ -28,7 +28,7 @@ endif
 LD_LIBRARY_PATH := $(LD_LIBRARY_PATH):$(PROJECTPATH)/INIParser
 LDLIBS += -lCore
 
-.INTERMEDIATE: $(LIBOBJS) $(TESTFILE:.cc=.o)
+# .INTERMEDIATE: $(LIBOBJS) $(TESTFILE:.cc=.o)
 
 all: $(TESTEXE)
 
@@ -44,4 +44,4 @@ $(TESTEXE): %: %.o $(LIB)
 	LD_LIBRARY_PATH=$(LD_LIBRARY_PATH): ./$@ --log_level=message
 
 clean:
-	rm -f $(DEPS) $(TESTEXE) $(LIB)
+	rm -f $(DEPS) $(TESTEXE) $(LIB) $(LIBOBJS) $(TESTFILE:.cc=.o)
