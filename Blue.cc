@@ -10,7 +10,7 @@
 
 using std::string;
 
-blue::blue(string filename) {
+Blue::Blue(string filename) {
 	AverageDataParser dataparser(filename);
 
 	errors=dataparser.getErrors();
@@ -29,40 +29,13 @@ blue::blue(string filename) {
 
 	dim=data.GetNrows();
 
-
-
-//	TODO: To be implemented in AverageDataParser and here...
-//	correlations;
-//	hcov;
-//	groupmatrix;
-//	cov;
-//	inv;
-
-
-//----------------------------------
-//  python code of constructor...
-//	self.dataparser= AverageDataParser( filename )
-//	        self.errors= self.dataparser.getErrors()
-//	        self.names= self.dataparser.getNames()
-//	        self.covopts= self.dataparser.getCovoption()
-//	        self.correlations= self.dataparser.getCorrelations()
-//	        self.hcov= self.dataparser.getCovariances()
-//	        self.cov= self.dataparser.getTotalCovariance()
-//	        self.inv= self.cov.getI()
-//	        self.groupmatrix= numpy.matrix( self.dataparser.getGroupMatrix() )
-//	        self.data= self.__columnVector( self.dataparser.getValues() )
-//	        self.totalerrors= self.__columnVector( self.dataparser.getTotalErrors() )
-
 }
 
-blue::~blue() {
-	// TODO Auto-generated destructor stub
+
+Blue::~Blue() {}
 
 
-
-}
-
-TMatrixD blue::_columnVector(std::vector<double> stdvec){
+TMatrixD Blue::_columnVector(std::vector<double> stdvec){
 	TMatrixD result;
 	int size=stdvec.size();
 	result.ResizeTo(size,1);
@@ -74,7 +47,7 @@ TMatrixD blue::_columnVector(std::vector<double> stdvec){
 }
 
 
-TMatrixD blue::calcWeightsMatrix() {
+TMatrixD Blue::calcWeightsMatrix() {
 
 	TMatrixD gmTrans;
 
@@ -92,14 +65,14 @@ TMatrixD blue::calcWeightsMatrix() {
 
 
 
-double blue::calcAverage(){
+double Blue::calcAverage(){
 	TMatrixD wm=calcWeightsMatrix();
 	double avg= (wm*data)(0);
 	return avg;
 
 }
 
-double blue::calcChisq(){
+double Blue::calcChisq(){
   //TVectorD delta= data - groupmatrix * calcAverage();
 	// TMatrixD deltaT;
 	// deltaT.ResizeTo(1,dim);
@@ -112,10 +85,11 @@ double blue::calcChisq(){
 
 
 
-TMatrixD blue::calcPulls(){
+TMatrixD Blue::calcPulls(){
 	// TMatrixD delta=data - groupmatrix * calcAverage();
 
 	// TMatrixD pulls=delta;
 	// pulls/= totalerrors;   // weird: TMatrix knows 'A/=B' but not 'A=C/B'
 	// return pulls;
 }
+

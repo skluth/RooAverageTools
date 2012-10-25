@@ -1,9 +1,9 @@
 // Unit tests for AverageTools
 // S. Kluth, 9/2012
 
-#include "blue.hh"
+#include "Blue.hh"
 
-#include "stdio.h"
+//#include "stdio.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -13,8 +13,8 @@
 
 //// ROOT includes
 
-#include <TMatrixD.h>
-#include <TMatrixDSym.h>
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
 
 // BOOST test stuff:
 #define BOOST_TEST_DYN_LINK
@@ -26,46 +26,15 @@ using std::string;
 using std::vector;
 
 // Test fixture for all tests:
-class blueTestFixture {
+class BlueTestFixture {
 public:
-	blueTestFixture() :
-			blueObject("filename") {
-		BOOST_MESSAGE( "Create blueTestFixture");
-
-		/*
-		 *
-		 * AS LONG AS WE DO NOT HAVE A WORKING AVERAGE PARSER...
-		 *
-		 *
-		 */
-		blueObject.dim = 3;
-
-		double invdata[] = { 0.34659934, -0.19506397, 0.000588, -0.19506397, 0.47026712, -0.29356603, 0.000588, -0.29356603, 0.27282462 };
-
-		blueObject.inv.ResizeTo(3, 3);
-		blueObject.inv.SetMatrixArray(invdata);
-
-		double groupdata[] = { 1, 1, 1 };
-		blueObject.groupmatrix.ResizeTo(3, 1);
-		blueObject.groupmatrix.SetMatrixArray(groupdata);
-
-		double datadata[] = { 171.5, 173.1, 174.5 };
-		blueObject.data.ResizeTo(3, 1);
-		blueObject.data.SetMatrixArray(datadata);
-
-		/*
-		 *
-		 *
-		 * END OF WORKAROUND
-		 *
-		 *
-		 */
-
-	}
-	virtual ~blueTestFixture() {
-		BOOST_MESSAGE( "Tear down blueTestFixture");
-	}
-	blue blueObject;
+  blueTestFixture() : blueObject( "filename" ) {
+    BOOST_MESSAGE( "Create blueTestFixture" );
+  }
+  virtual ~blueTestFixture() {
+    BOOST_MESSAGE( "Tear down blueTestFixture");
+  }
+  blue blueObject;
 };
 
 // Declare test suite name and fixture class to BOOST:

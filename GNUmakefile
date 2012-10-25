@@ -6,7 +6,7 @@ CXX = g++
 LD = $(CXX)
 CXXFLAGS = -g -Wall -fPIC
 
-LIBFILES = AverageDataParser.cc ClsqAverage.cc blue.cc minuitSolver.cc
+LIBFILES = AverageDataParser.cc ClsqAverage.cc Blue.cc minuitSolver.cc
 LIB = libRooAverageTools.so
 TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc testminuitSolver.cc
 TESTEXE = $(basename $(TESTFILE) )
