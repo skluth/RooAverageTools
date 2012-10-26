@@ -113,6 +113,8 @@ void Blue::printResults( std::ostream& ost ) const {
   if( nuniquegroups > 1 ) m_parser.printUniqueGroups( ost );
   printAverages( ost );
   printErrors( ost );
+  printCorrelations( ost );
+  ost << std::endl;
 }
 
 void Blue::printChisq( std::ostream& ost ) const {
@@ -185,3 +187,27 @@ void Blue::printErrors( std::ostream& ost ) const {
   }
 }
 
+void Blue::printCorrelations( std::ostream& ost ) const {
+  vector<string> uniquegroups= m_parser.getUniqueGroups();
+  size_t navg= uniquegroups.size();
+  if( navg > 1 ) {
+    MatrixMap errorsmap= errorAnalysis();
+    TMatrixD totcov= errorsmap["total"];
+    Int_t nerr= totcov.GetNrows();
+    ost << "\n Total correlations:\n  ";
+    for( size_t iavg= 0; iavg < navg; iavg++ ) {
+      ost << " " << std::setw( 5 ) << uniquegroups[iavg];
+    }
+    ost << std::endl;
+    ost.precision( 2 );
+    ost.setf( std::ios_base::fixed );    
+    for( Int_t iavg= 0; iavg < navg; iavg++ ) {
+      ost << std::setw( 2 ) << uniquegroups[iavg];
+      for( Int_t javg= 0; javg < nerr; javg++ ) {
+	ost << " " << std::setw( 5 ) 
+	    << totcov(iavg,javg)/sqrt(totcov(iavg,iavg)*totcov(javg,javg));
+      }
+      ost << std::endl;
+    }
+  }
+}

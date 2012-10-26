@@ -36,6 +36,8 @@ public:
   void printPulls( std::ostream& ost= std::cout ) const;
   void printAverages( std::ostream& ost= std::cout ) const;
   void printErrors( std::ostream& ost= std::cout ) const;
+  void printCorrelations( std::ostream& ost= std::cout ) const;
+
 
 private:
 

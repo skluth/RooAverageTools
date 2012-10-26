@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 class BluePrintTestFixture {
 public:
-  BluePrintTestFixture() : blue( "valassi1.txt" ) {}
+  BluePrintTestFixture() : blue( "valassi2.txt" ) {}
   Blue blue;
 };
 
