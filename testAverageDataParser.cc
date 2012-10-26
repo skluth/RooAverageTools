@@ -499,6 +499,18 @@ BOOST_AUTO_TEST_CASE( testGetGroups ) {
   }
 }
 
+BOOST_AUTO_TEST_CASE( testGetUniqueGroups ) {
+  BOOST_MESSAGE( "testgetUniqueGroups" );
+  vector<string> groups= parser.getUniqueGroups();
+  vector<string> expectedGroups;
+  expectedGroups.push_back( "a" );
+  expectedGroups.push_back( "b" );
+  BOOST_CHECK_EQUAL( groups.size(), expectedGroups.size() );
+  for( size_t i= 0; i < expectedGroups.size(); i++ ) {
+    BOOST_CHECK_EQUAL( groups[i], expectedGroups[i] );
+  }
+}
+
 BOOST_AUTO_TEST_CASE( testGetGroupMatrix ) {
   BOOST_MESSAGE( "testgetGroupMatrix" );
   TMatrixD groupmatrix= parser.getGroupMatrix();

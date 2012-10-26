@@ -77,6 +77,9 @@ void AverageDataParser::makeNames( const INIParser::INIReader& reader ) {
 vector<string> AverageDataParser::getGroups() const {
   return m_groups;
 }
+vector<string> AverageDataParser::getUniqueGroups() const {
+  return m_uniquegroups;
+}
 TMatrixD AverageDataParser::getGroupMatrix() const {
   return m_groupmatrix;
 }
@@ -95,19 +98,18 @@ void AverageDataParser::makeGroups( const INIParser::INIReader& reader ) {
   }
 }
 void AverageDataParser::makeGroupMatrix() {
-  vector<string> uniquegroups( m_groups );
-  std::sort( uniquegroups.begin(), uniquegroups.end() );
-  vector<string>::iterator uniqueend= std::unique( uniquegroups.begin(), 
-						   uniquegroups.end() );
-  uniquegroups.resize( uniqueend - uniquegroups.begin() );
-  m_numberOfGroups= uniquegroups.size();
-  m_groupmatrix.ResizeTo( m_groups.size(), uniquegroups.size() );
+  m_uniquegroups= m_groups;
+  std::sort( m_uniquegroups.begin(), m_uniquegroups.end() );
+  vector<string>::iterator uniqueend= std::unique( m_uniquegroups.begin(), 
+						   m_uniquegroups.end() );
+  m_uniquegroups.resize( uniqueend - m_uniquegroups.begin() );
+  m_groupmatrix.ResizeTo( m_groups.size(), m_uniquegroups.size() );
   for( size_t igroup= 0; igroup < m_groups.size(); igroup++ ) {
-    vector<string>::iterator itr= std::find( uniquegroups.begin(), 
-					     uniquegroups.end(), 
+    vector<string>::iterator itr= std::find( m_uniquegroups.begin(), 
+					     m_uniquegroups.end(), 
 					     m_groups[igroup] );
-    if( itr != uniquegroups.end() ) {
-      size_t groupindex= itr - uniquegroups.begin();
+    if( itr != m_uniquegroups.end() ) {
+      size_t groupindex= itr - m_uniquegroups.begin();
       m_groupmatrix( igroup, groupindex )= 1.0;
     }
   }
@@ -385,7 +387,7 @@ void AverageDataParser::makeCovariances() {
 }
 
 
-string stripLeadingDigits( const string& word ) {
+string AverageDataParser::stripLeadingDigits( const string& word ) const {
   size_t iposalpha= 0;
   for( size_t ipos= 0; ipos < word.size(); ipos++ ) {
     if( isalpha( word[ipos] ) ) {
@@ -407,10 +409,18 @@ void AverageDataParser::printNames( std::ostream& ost ) const {
   }
   ost << endl;
 }
+void AverageDataParser::printUniqueGroups( std::ostream& ost ) const {
+  printvectorstring( m_uniquegroups, "Groups:", ost );
+}
 void AverageDataParser::printGroups( std::ostream& ost ) const {
-  ost << std::setw(11) << "Groups:";
-  for( size_t igroup= 0; igroup < m_groups.size(); igroup++ ) {
-    ost << " " << std::setw(10) << m_groups[igroup];
+  printvectorstring( m_groups, "Groups:", ost );
+}
+void AverageDataParser::printvectorstring( const vector<string>& vec,
+					   const string& txt,
+					   std::ostream& ost ) const {
+  ost << std::setw(11) << txt;
+  for( size_t i= 0; i < vec.size(); i++ ) {
+    ost << " " << std::setw(10) << vec[i];
   }
   ost << endl;
 }
@@ -447,7 +457,7 @@ void AverageDataParser::printTotalErrors( std::ostream& ost ) const {
   ost << endl;
 }
 void AverageDataParser::printCorrelations( std::ostream& ost ) const {
-  ost << "Correlations:" << endl;
+  if( m_correlations.size() > 1 ) ost << "Correlations:" << endl;
   for( StringMap::const_iterator mapitr= m_correlations.begin();
        mapitr != m_correlations.end(); mapitr++ ) {
     string key= mapitr->first;
@@ -515,7 +525,7 @@ void AverageDataParser::printCorrelationMatrices( std::ostream& ost )const {
 void AverageDataParser::printInputs( std::ostream& ost ) const {
   printFilename( ost );
   printNames( ost );
-  if( m_numberOfGroups > 0 ) {
+  if( m_uniquegroups.size() > 0 ) {
     printGroups( ost );
   }
   printValues( ost );

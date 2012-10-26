@@ -43,11 +43,13 @@ public:
   TMatrixDSym getTotalReducedCovariances() const;
   std::map<int,TVectorD> getSysterrorMatrix() const;
   std::vector<std::string> getGroups() const;
+  std::vector<std::string> getUniqueGroups() const;
   TMatrixD getGroupMatrix() const;
   void printInputs( std::ostream& ost=std::cout ) const;
   void printFilename( std::ostream& ost=std::cout ) const;
   void printNames( std::ostream& ost=std::cout ) const;
   void printGroups( std::ostream& ost=std::cout ) const;
+  void printUniqueGroups( std::ostream& ost=std::cout ) const;
   void printValues( std::ostream& ost=std::cout ) const;
   void printErrors( std::ostream& ost=std::cout ) const;
   void printTotalErrors( std::ostream& ost=std::cout ) const;
@@ -56,6 +58,7 @@ public:
 			 std::ios_base::fmtflags flag=std::ios_base::fixed,
 			 size_t prec=4 ) const;
   void printCorrelationMatrices( std::ostream& ost=std::cout ) const;
+  std::string stripLeadingDigits( const std::string& word ) const;
 
 private:
 
@@ -73,6 +76,9 @@ private:
 			   const TVectorD& errors, 
 			   size_t ierr, size_t jerr ) const;
   TMatrixDSym sumOverMatrixMap( const MatrixMap& ) const;
+  void printvectorstring( const std::vector<std::string>& vec,
+			  const std::string& txt,
+			  std::ostream& ost=std::cout ) const;
 
   std::string m_filename;
   std::vector<std::string> m_names;
@@ -81,11 +87,11 @@ private:
   StringMap m_covopts;
   StringMap m_correlations;
   std::vector<std::string> m_groups;
+  std::vector<std::string> m_uniquegroups;
   MatrixMap m_covariances;
   MatrixMap m_reducedCovariances;
   std::map<int,TVectorD> m_systerrmatrix;
   TMatrixD m_groupmatrix;
-  size_t m_numberOfGroups;
   TVectorD m_totalerrors;
 
 };
