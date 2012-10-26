@@ -87,7 +87,9 @@ MatrixMap Blue::errorAnalysis() const {
 }
 
 void Blue::printInputs( std::ostream& ost ) const {
-  ost << "\n Best Linear Unbiased Estimator average\n" << std::endl;
+  ost << "\nBest Linear Unbiased Estimator average\n" << std::endl;
+  m_parser.printFilename( ost );
+  ost << std::endl;
   m_parser.printNames( ost );
   if( m_parser.getUniqueGroups().size() > 1 ) {
     m_parser.printGroups( ost );
@@ -125,10 +127,10 @@ void Blue::printChisq( std::ostream& ost ) const {
   Double_t chisq= calcChisq();
   Double_t chisqdof= chisq/Double_t(ndof);
   Double_t pvalue= TMath::Prob( chisq, ndof );
-  ost << " Results:" << std::endl;
+  ost << "Results:" << std::endl;
   ost.precision( 2 );
   ost.setf( std::ios_base::fixed );
-  ost << "\n Chi^2= " << chisq << " for " << ndof << " d.o.f,";
+  ost << "\nChi^2= " << chisq << " for " << ndof << " d.o.f,";
   ost << " chi^2/d.o.f= " << chisqdof;
   ost.precision( 4 );
   ost << ", P(chi^2)= " << pvalue << std::endl;
@@ -194,7 +196,7 @@ void Blue::printCorrelations( std::ostream& ost ) const {
     MatrixMap errorsmap= errorAnalysis();
     TMatrixD totcov= errorsmap["total"];
     Int_t nerr= totcov.GetNrows();
-    ost << "\n Total correlations:\n  ";
+    ost << "\nTotal correlations:\n  ";
     for( size_t iavg= 0; iavg < navg; iavg++ ) {
       ost << " " << std::setw( 5 ) << uniquegroups[iavg];
     }
