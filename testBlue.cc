@@ -6,10 +6,10 @@
 //#include "stdio.h"
 
 #include <iostream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 #include <map>
+#include <math.h>
 
 //// ROOT includes
 
@@ -24,6 +24,7 @@
 // Namespaces:
 using std::string;
 using std::vector;
+using std::map;
 
 // Test fixture for all tests:
 class BlueTestFixture {
@@ -68,6 +69,52 @@ BOOST_AUTO_TEST_CASE( testcalcPulls ) {
     BOOST_CHECK_CLOSE( obtained[i], expected[i], 1.0e-4 );
   }
 }
+
+BOOST_AUTO_TEST_CASE( testerrorAnalysis ) {
+  BOOST_MESSAGE( "testerrorAnalysis" );
+  MatrixMap obtained= blue.errorAnalysis();
+  map<string,Double_t> expected;
+  expected["00stat"]= 0.4114006127938109;
+  expected["01err1"]= 1.132605331048375;
+  expected["02err2"]= 0.62562331148619099;
+  expected["03err3"]= 2.5071108260136228;
+  expected["04err4"]= 0.82049571716089753;
+  expected["syst"]= 2.9381996663923697;
+  expected["total"]= 2.9668615983552984;
+  BOOST_CHECK_EQUAL( obtained.size(), expected.size() );
+  MatrixMap::const_iterator obtitr;
+  map<string,Double_t>::const_iterator expitr;
+  for( obtitr= obtained.begin(), expitr= expected.begin();
+       expitr != expected.end(); obtitr++, expitr++ ) {
+    BOOST_CHECK_EQUAL( obtitr->first, expitr->first );
+    Double_t obtainederror= sqrt( (obtitr->second)(0,0) );
+    Double_t expectederror= expitr->second;
+    BOOST_CHECK_CLOSE( obtainederror, expectederror, 1.0e-4 );
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+class BluePrintTestFixture {
+public:
+  BluePrintTestFixture() : blue( "valassi1.txt" ) {}
+  Blue blue;
+};
+
+// Declare test suite name and fixture class to BOOST:
+BOOST_FIXTURE_TEST_SUITE( blueprintsuite, BluePrintTestFixture )
+
+BOOST_AUTO_TEST_CASE( testprintInputs ) {
+  BOOST_MESSAGE( "testprintInputs" );
+  blue.printInputs();
+}
+BOOST_AUTO_TEST_CASE( testprintResults ) {
+  BOOST_MESSAGE( "testprintResults" );
+  blue.printResults();
+}
+
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

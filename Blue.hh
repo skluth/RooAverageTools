@@ -11,6 +11,7 @@
 
 // C++ includes
 #include <string>
+#include <iostream>
 
 // ROOT includes
 #include "TVectorD.h"
@@ -27,10 +28,19 @@ public:
   TVectorD calcAverage() const;
   Double_t calcChisq() const;
   TVectorD calcPulls() const;
-  // void printInputs();
+  MatrixMap errorAnalysis() const;
+  void printInputs( std::ostream& ost= std::cout ) const;
+  void printResults( std::ostream& ost= std::cout ) const;
+  void printChisq( std::ostream& ost= std::cout ) const;
+  void printWeights( std::ostream& ost= std::cout ) const;
+  void printPulls( std::ostream& ost= std::cout ) const;
+  void printAverages( std::ostream& ost= std::cout ) const;
+  void printErrors( std::ostream& ost= std::cout ) const;
 
 private:
 
+  void printVector( const TVectorD& vec, const std::string& txt,
+		    std::ostream& ost= std::cout ) const;
   AverageDataParser m_parser;
   TMatrixDSym m_invm;
 
