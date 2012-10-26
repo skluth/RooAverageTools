@@ -2,12 +2,14 @@
 
 #include "AverageDataParser.hh"
 #include "INIReader.hh"
+
 #include <vector>
 #include <utility>
 #include <algorithm>
 #include <list>
 #include <math.h>
 #include <iomanip>
+#include <exception>
 
 // Commonly used identifiers
 using std::string;
@@ -16,10 +18,34 @@ using std::map;
 using std::endl;
 using namespace INIParser;
 
+class ParserError: public std::exception {
+public:
+  ParserError( int ec, const char* fname ) : 
+    errorcode( ec ), filename( fname ) {}
+  virtual const char* what() const throw() {
+    std::stringstream strstr;
+    strstr << "INIParser error: ";
+    if( errorcode == -1 ) {
+      strstr << "file " << filename << " not found";
+    }
+    else {
+      strstr << "line " << errorcode;
+    }
+    string txt= strstr.str();
+    return txt.c_str();
+  }
+private:
+  int errorcode;
+  const char* filename;
+};
+
 // Ctors:
 AverageDataParser::AverageDataParser( const string& fname ) 
   : m_filename( fname ) {
   INIParser::INIReader reader( fname );
+  if( reader.parseError() != 0 ) {
+    throw ParserError( reader.parseError(), fname.c_str() );
+  }
   makeNames( reader );
   makeValues( reader );
   makeGroups( reader );
@@ -457,17 +483,27 @@ void AverageDataParser::printTotalErrors( std::ostream& ost ) const {
   ost << endl;
 }
 void AverageDataParser::printCorrelations( std::ostream& ost ) const {
-  if( m_correlations.size() > 1 ) ost << "Correlations:" << endl;
+  if( m_correlations.size() > 0 ) ost << "Correlations:" << endl;
   for( StringMap::const_iterator mapitr= m_correlations.begin();
        mapitr != m_correlations.end(); mapitr++ ) {
     string key= mapitr->first;
     ost << "\n " << stripLeadingDigits( key )+":" << endl;
     string correlations= mapitr->second;
     vector<string> corrtokens= INIParser::getTokens( correlations );
+    string covopt= m_covopts.find( key )->second;
+    ost.precision( 2 );
+    ost.setf( std::ios::fixed, std::ios::floatfield );
     size_t nerr= m_names.size();
     for( size_t ierr= 0; ierr < nerr; ierr++ ) {
       for( size_t jerr= 0; jerr < nerr; jerr++ ) {
-	ost << " " << corrtokens.at( ierr*nerr+jerr );
+	if( covopt.find( "m" ) != string::npos ) {
+	  ost << " " << corrtokens.at( ierr*nerr+jerr );
+	}
+	else if( covopt.find( "c" ) != string::npos ) {
+	  Double_t corr= 
+	    INIParser::stringToType( corrtokens.at( ierr*nerr+jerr ), 0.0 );
+	  ost << " " << std::setw(5) << corr;
+	}
       }
       ost << endl;
     }

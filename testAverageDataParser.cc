@@ -301,9 +301,9 @@ BOOST_AUTO_TEST_CASE( testprintCorrelations ) {
   string expected= 
     "Correlations:\n\n"
     " stat:\n"
-    " 1. 0. 0.\n"
-    " 0. 1. 0.\n"
-    " 0. 0. 1.\n\n"
+    "  1.00  0.00  0.00\n"  
+    "  0.00  1.00  0.00\n"  
+    "  0.00  0.00  1.00\n\n"
     " err1:\n"
     " p p p\n"
     " p p p\n"
