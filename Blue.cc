@@ -117,6 +117,7 @@ void Blue::printResults( std::ostream& ost ) const {
   printErrors( ost );
   printCorrelations( ost );
   ost << std::endl;
+  return;
 }
 
 void Blue::printChisq( std::ostream& ost ) const {
@@ -134,6 +135,7 @@ void Blue::printChisq( std::ostream& ost ) const {
   ost << " chi^2/d.o.f= " << chisqdof;
   ost.precision( 4 );
   ost << ", P(chi^2)= " << pvalue << std::endl;
+  return;
 }
 
 void Blue::printWeights( std::ostream& ost ) const {
@@ -154,13 +156,16 @@ void Blue::printWeights( std::ostream& ost ) const {
     }
     ost << std::endl;
   }
+  return;
 }
 
 void Blue::printPulls( std::ostream& ost ) const {
   printVector( calcPulls(), "Pulls:", ost );
+  return;
 }
 void Blue::printAverages( std::ostream& ost ) const {
   printVector( calcAverage(), "Average:", ost );
+  return;
 }
 void Blue::printVector( const TVectorD& vec,
 			const string& txt,
@@ -172,6 +177,7 @@ void Blue::printVector( const TVectorD& vec,
     ost << " " << std::setw(10) << vec[i];
   }
   ost << std::endl;
+  return;
 }
 
 void Blue::printErrors( std::ostream& ost ) const {
@@ -187,6 +193,7 @@ void Blue::printErrors( std::ostream& ost ) const {
     }
     ost << std::endl;
   }
+  return;
 }
 
 void Blue::printCorrelations( std::ostream& ost ) const {
@@ -194,8 +201,12 @@ void Blue::printCorrelations( std::ostream& ost ) const {
   size_t navg= uniquegroups.size();
   if( navg > 1 ) {
     MatrixMap errorsmap= errorAnalysis();
-    TMatrixD totcov= errorsmap["total"];
-    Int_t nerr= totcov.GetNrows();
+    MatrixMap::const_iterator totitr= errorsmap.find( "total" );
+    if( totitr == errorsmap.end() ) {
+      ost << "Total covariance matrix not found" << std::endl;
+      return;
+    }
+    TMatrixD totcov= totitr->second;
     ost << "\nTotal correlations:\n  ";
     for( size_t iavg= 0; iavg < navg; iavg++ ) {
       ost << " " << std::setw( 5 ) << uniquegroups[iavg];
@@ -203,13 +214,14 @@ void Blue::printCorrelations( std::ostream& ost ) const {
     ost << std::endl;
     ost.precision( 2 );
     ost.setf( std::ios_base::fixed );    
-    for( Int_t iavg= 0; iavg < navg; iavg++ ) {
+    for( size_t iavg= 0; iavg < navg; iavg++ ) {
       ost << std::setw( 2 ) << uniquegroups[iavg];
-      for( Int_t javg= 0; javg < nerr; javg++ ) {
+      for( size_t javg= 0; javg < navg; javg++ ) {
 	ost << " " << std::setw( 5 ) 
 	    << totcov(iavg,javg)/sqrt(totcov(iavg,iavg)*totcov(javg,javg));
       }
       ost << std::endl;
     }
   }
+  return;
 }
