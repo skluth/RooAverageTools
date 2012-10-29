@@ -6,9 +6,11 @@ CXX = g++
 LD = $(CXX)
 CXXFLAGS = -g -Wall -fPIC
 
-LIBFILES = AverageDataParser.cc ClsqAverage.cc Blue.cc minuitSolver.cc
+#LIBFILES = AverageDataParser.cc ClsqAverage.cc Blue.cc minuitSolver.cc
+LIBFILES = AverageDataParser.cc ClsqAverage.cc Blue.cc MinuitSolver.cc
 LIB = libRooAverageTools.so
-TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc testminuitSolver.cc
+# TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc testminuitSolver.cc
+TESTFILE = testAverageDataParser.cc testClsqAverage.cc testBlue.cc testMinuitSolver.cc
 TESTEXE = $(basename $(TESTFILE) )
 LIBOBJS = $(LIBFILES:.cc=.o)
 DEPS = $(LIBFILES:.cc=.d) $(TESTFILE:.cc=.d)
