@@ -7,35 +7,45 @@
 using std::string;
 using std::vector;
 
-// Ctor for use with standard Minuit fcn:
-MinuitSolver::MinuitSolver( fcn_t fcn, 
-			    const vector<string>& parnames, 
-			    const TVectorD& pars, 
-			    const TVectorD& parerrors, 
-			    int ndof, bool quiet, int maxpars ):
-  m_parnames( parnames),
-  m_pars( pars ),
-  m_parerrors( parerrors ),
-  m_ndof( ndof ),
-  m_minuit( new TMinuit( maxpars ) ) {
+
+MinuitSolver& MinuitSolver::getInstance() { 
+  static MinuitSolver solver;
+  return solver; 
+}
+
+// Configuration for use with standard Minuit fcn:
+void MinuitSolver::configure( fcn_t fcn, 
+			      const vector<string>& parnames, 
+			      const TVectorD& pars, 
+			      const TVectorD& parerrors, 
+			      int ndof, bool quiet, int maxpars ) {
+  m_parnames= parnames;
+  m_pars.ResizeTo( pars.GetNoElements() );
+  m_pars= pars;
+  m_parerrors.ResizeTo( parerrors.GetNoElements() );
+  m_parerrors= parerrors;
+  m_ndof= ndof;
+  m_minuit= new TMinuit( maxpars );
   m_minuit->SetFCN( fcn );
   checkMaxpars( pars, maxpars );
   if( quiet ) minuitCommand( "SET PRI -1" );
   setupParameters();
 }
 
-// Ctor for use with MinuitSolverFunction, the address of the
-// MinuitSolverFunction object needs to be set explicitly since
-// myfcn must be static for Minuit:
-MinuitSolver::MinuitSolver( const vector<string>& parnames, 
-			    const TVectorD& pars, 
-			    const TVectorD& parerrors, 
-			    int ndof, bool quiet, int maxpars ):
-  m_parnames( parnames ),
-  m_pars( pars ),
-  m_parerrors( parerrors ),
-  m_ndof( ndof ),
-  m_minuit( new TMinuit( maxpars ) ) {
+// Configuration for use with MinuitSolverFunction:
+void MinuitSolver::configure( const MinuitSolverFunction& msf,
+			      const vector<string>& parnames, 
+			      const TVectorD& pars, 
+			      const TVectorD& parerrors, 
+			      int ndof, bool quiet, int maxpars ) {
+  m_msf= &msf;
+  m_parnames= parnames;
+  m_pars.ResizeTo( pars.GetNoElements() );
+  m_pars= pars;
+  m_parerrors.ResizeTo( parerrors.GetNoElements() );
+  m_parerrors= parerrors;
+  m_ndof= ndof;
+  m_minuit= new TMinuit( maxpars );
   m_minuit->SetFCN( myfcn );
   checkMaxpars( pars, maxpars );
   if( quiet ) minuitCommand( "SET PRI -1" );
@@ -60,7 +70,6 @@ void MinuitSolver::checkMaxpars( const TVectorD& pars, Int_t maxpars ) {
   }
   return;
 }
-
 void MinuitSolver::setupParameters() {
   Int_t nPars= m_pars.GetNoElements();
   for( int iPar= 0; iPar < nPars; ++iPar ) {
@@ -159,6 +168,7 @@ void MinuitSolver::printCorrelations() const {
 
 void MinuitSolver::solve() const {
   minuitCommand( "MIGRAD" );
+  return;
 }
 
 void MinuitSolver::minuitCommand( string command ) const {
@@ -167,5 +177,6 @@ void MinuitSolver::minuitCommand( string command ) const {
     std::cerr << "Minuit command " << command << " failed: " 
 	      << error << std::endl;
   }
+  return;
 }
 

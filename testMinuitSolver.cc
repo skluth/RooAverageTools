@@ -38,6 +38,9 @@ void fcn( Int_t& npar, Double_t* grad, Double_t& fval, Double_t* par,
   return;
 }
 
+// Function object for use with MinuitSolver, its method calculate
+// is called by Minuit and is expected to return the objective
+// function value (aka chi^2):
 class testmsf: public MinuitSolverFunction {
 public:
   testmsf( const TVectorD& mtop, const TVectorD& stat,
@@ -75,9 +78,11 @@ public:
     parnames.push_back( "pb" );
     parnames.push_back( "pc" );
     int ndof= 2;
-    // minsol2= new MinuitSolver( fcn, parnames, pars, parerrors, ndof );
-    // minsol2->solve( true );
-    minsol= new MinuitSolver( parnames, pars, parerrors, ndof );
+
+    minsol2= &(MinuitSolver::getInstance());
+    minsol2->configure( fcn, parnames, pars, parerrors, ndof );
+    minsol2->solve();
+
     Double_t mtopdata[3]= { 171.5, 173.1, 174.5 };
     Double_t statdata[3]= { 0.3, 0.33, 0.4 };
     Double_t erradata[3]= { 1.1, 1.3, 1.5 };
@@ -89,12 +94,13 @@ public:
     TVectorD errb( 3, errbdata );
     TVectorD errc( 3, errcdata );
     testmsf tmsf( mtop, stat, erra, errb, errc );
-    MinuitSolver::setMinuitSolverFunction( tmsf );
+
+    minsol= &(MinuitSolver::getInstance());
+    minsol->configure( tmsf, parnames, pars, parerrors, ndof );
     minsol->solve();
+
   }
-  virtual ~MinuitSolverTestFixture() {
-    delete minsol;
-  }
+  virtual ~MinuitSolverTestFixture() {}
   MinuitSolver* minsol;
   MinuitSolver* minsol2;
 };

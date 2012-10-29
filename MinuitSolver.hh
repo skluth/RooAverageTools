@@ -27,19 +27,28 @@ public:
 
 class MinuitSolver {
 
+private:
+
+  MinuitSolver() {}
+  MinuitSolver( const MinuitSolver& ) {}
+  ~MinuitSolver();
+
 public:
 
-  MinuitSolver( fcn_t fcn, 
-		const std::vector<std::string>& parnames, 
-		const TVectorD& pars, 
-		const TVectorD& parerrors, 
-		int ndf, bool quiet=true, int maxpars=50 );
-  // MinuitSolver( const MinuitSolverFunction& msf, 
-  MinuitSolver( const std::vector<std::string>& parnames, 
-		const TVectorD& pars, 
-		const TVectorD& parerrors, 
-		int ndf, bool quiet=true, int maxpars=50 );
-  ~MinuitSolver();
+  static MinuitSolver& getInstance();
+
+  void configure( fcn_t fcn, 
+		  const std::vector<std::string>& parnames, 
+		  const TVectorD& pars, 
+		  const TVectorD& parerrors, 
+		  int ndf, bool quiet=true, int maxpars=50 );
+
+  void configure( const MinuitSolverFunction& msf, 
+		  const std::vector<std::string>& parnames, 
+		  const TVectorD& pars, 
+		  const TVectorD& parerrors, 
+		  int ndf, bool quiet=true, int maxpars=50 );
+
   //getter
   int getNdof() const { return m_ndof; }
   TVectorD getUpar() const { return getPars().first; }
@@ -74,14 +83,17 @@ private:
   TVectorD m_pars;
   TVectorD m_parerrors;
   int m_ndof;
+  // Must be pointer due to non-constness of TMinuit
   TMinuit* m_minuit;
 
   static void myfcn( Int_t& npar, Double_t* grad, Double_t& fval, 
   		     Double_t* par, Int_t iflag );
   static const MinuitSolverFunction* m_msf;
 
+
 };
 
 const MinuitSolverFunction* MinuitSolver::m_msf= 0;
+
 
 #endif
