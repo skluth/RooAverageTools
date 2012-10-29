@@ -3,16 +3,14 @@
 
 #include "Blue.hh"
 
-//#include "stdio.h"
-
+// C++:
 #include <iostream>
 #include <string>
 #include <vector>
 #include <map>
 #include <math.h>
 
-//// ROOT includes
-
+// ROOT includes:
 #include "TMatrixD.h"
 #include "TMatrixDSym.h"
 
@@ -26,53 +24,51 @@ using std::string;
 using std::vector;
 using std::map;
 
-// Test fixture for all tests:
+// Blue functionality tests:
+
 class BlueTestFixture {
 public:
   BlueTestFixture() : blue( "test.txt" ) {}
   Blue blue;
 };
 
-// Declare test suite name and fixture class to BOOST:
 BOOST_FIXTURE_TEST_SUITE( bluesuite, BlueTestFixture )
 
-// Test cases:
-
-BOOST_AUTO_TEST_CASE( testcalcWeightsMatrix ) {
-  BOOST_MESSAGE( "testcalcWeightsMatrix" );
+BOOST_AUTO_TEST_CASE( testgetWeightsMatrix ) {
+  BOOST_MESSAGE( "testgetWeightsMatrix" );
   double expected[]= { 1.33903066, -0.16163493, -0.17739573 };
-  TMatrixD result= blue.calcWeightsMatrix();
-  for( int i = 0; i < 3; i++) {
+  TMatrixD result= blue.getWeightsMatrix();
+  for( Int_t i = 0; i < 3; i++) {
     BOOST_CHECK_CLOSE( expected[i], result(0,i), 1.0e-4 );
-  }  
+  }
 }
 
-BOOST_AUTO_TEST_CASE( testcalcAverage ) {
-  BOOST_MESSAGE( "testcalcAverage" );
+BOOST_AUTO_TEST_CASE( testgetAverage ) {
+  BOOST_MESSAGE( "testgetAverage" );
   Double_t expected= 170.709197;
-  TVectorD result= blue.calcAverage();
+  TVectorD result= blue.getAverage();
   BOOST_CHECK_CLOSE( expected, result[0], 1.0e-4 );
 }
 
-BOOST_AUTO_TEST_CASE( testcalcChisq ) {
-  BOOST_MESSAGE( "testcalcChisq" );
-  double obtained= blue.calcChisq();
+BOOST_AUTO_TEST_CASE( testgetChisq ) {
+  BOOST_MESSAGE( "testgetChisq" );
+  double obtained= blue.getChisq();
   double expected= 0.770025;
   BOOST_CHECK_CLOSE( obtained, expected, 1.0e-4 );
 }
 
-BOOST_AUTO_TEST_CASE( testcalcPulls ) {
-  BOOST_MESSAGE( "testcalcPulls" );
-  TVectorD obtained= blue.calcPulls();
+BOOST_AUTO_TEST_CASE( testgetPulls ) {
+  BOOST_MESSAGE( "testgetPulls" );
+  TVectorD obtained= blue.getPulls();
   Double_t expected[]= { 0.25222701, 0.5089246205, 0.70200057 };
   for( int i= 0; i < 3; i++ ) {
     BOOST_CHECK_CLOSE( obtained[i], expected[i], 1.0e-4 );
   }
 }
 
-BOOST_AUTO_TEST_CASE( testerrorAnalysis ) {
-  BOOST_MESSAGE( "testerrorAnalysis" );
-  MatrixMap obtained= blue.errorAnalysis();
+BOOST_AUTO_TEST_CASE( testgetErrors ) {
+  BOOST_MESSAGE( "testgetErrors" );
+  MatrixMap obtained= blue.getErrors();
   map<string,Double_t> expected;
   expected["00stat"]= 0.4114006127938109;
   expected["01err1"]= 1.132605331048375;
@@ -95,6 +91,7 @@ BOOST_AUTO_TEST_CASE( testerrorAnalysis ) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
+// Blue Printing tests:
 
 class BluePrintTestFixture {
 public:
@@ -161,7 +158,6 @@ BOOST_AUTO_TEST_CASE( testprintCorrelations ) {
     " b  0.95  1.00\n";
   BOOST_CHECK_EQUAL( obtained, expected );
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

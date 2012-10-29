@@ -19,71 +19,88 @@ Blue::Blue( const string& filename ) :
   m_parser( filename ), 
   m_invm( m_parser.getTotalCovariances() ) {
   m_invm.Invert();
+  calcWeightsMatrix();
+  calcAverage();
+  calcChisq();
+  calcPulls();
+  errorAnalysis();
 }
 
 Blue::~Blue() {}
 
-TMatrixD Blue::calcWeightsMatrix() const {
+TMatrixD Blue::getWeightsMatrix() const {
+  return m_weightsmatrix;
+}
+void Blue::calcWeightsMatrix() {
   TMatrixD gm( m_parser.getGroupMatrix() );
   TMatrixD gmT( gm );
   gmT.T();
   TMatrixDSym invm( m_invm );
   TMatrixDSym& utvinvuinv= invm.SimilarityT( gm );
   utvinvuinv.Invert();
-  TMatrixD wm= utvinvuinv*gmT*m_invm;
-  return wm;
+  m_weightsmatrix.ResizeTo( gm.GetNcols(), gm.GetNrows() );
+  m_weightsmatrix= utvinvuinv*gmT*m_invm;
+  return;
 }
 
-TVectorD Blue::calcAverage() const {
-  TMatrixD wm= calcWeightsMatrix();
+TVectorD Blue::getAverage() const {
+  return m_average;
+}
+void Blue::calcAverage() {
   TVectorD data= m_parser.getValues();
-  TVectorD avg= wm*data;
-  return avg;
+  m_average.ResizeTo( m_weightsmatrix.GetNrows() );
+  m_average= m_weightsmatrix*data;
+  return;
 }
 
-Double_t Blue::calcChisq() const {
-  TVectorD avg= calcAverage();
+Double_t Blue::getChisq() const {
+  return m_chisq;
+}
+void Blue::calcChisq() {
   TVectorD data= m_parser.getValues();
   TMatrixD gm= m_parser.getGroupMatrix();
-  TVectorD delta= data - gm*avg;
+  TVectorD delta= data - gm*m_average;
   TMatrixDSym invm( m_invm );
-  Double_t chisq= invm.Similarity( delta );
-  return chisq;
+  m_chisq= invm.Similarity( delta );
+  return;
 }
 
-TVectorD Blue::calcPulls() const {
-  TVectorD avg= calcAverage();
+TVectorD Blue::getPulls() const {
+  return m_pulls;
+}
+void Blue::calcPulls() {
   TVectorD data= m_parser.getValues();
   TMatrixD gm= m_parser.getGroupMatrix();
   TVectorD totalerrors= m_parser.getTotalErrors();
-  TVectorD delta= data - gm*avg;
+  TVectorD delta= data - gm*m_average;
   Int_t nerr= data.GetNoElements();
-  TVectorD pulls( nerr ); 
+  m_pulls.ResizeTo( nerr );
   for( Int_t ierr= 0; ierr < nerr; ierr++ ) {
-    pulls[ierr]= delta[ierr]/totalerrors[ierr];
+    m_pulls[ierr]= delta[ierr]/totalerrors[ierr];
   }
-  return pulls;
+  return;
 }
 
-MatrixMap Blue::errorAnalysis() const {
+MatrixMap Blue::getErrors() const {
+  return m_errorsmap;
+}
+void Blue::errorAnalysis() {
   MatrixMap covariances= m_parser.getCovariances();
-  TMatrixD wm= calcWeightsMatrix();
-  Int_t navg= wm.GetNrows();
+  Int_t navg= m_weightsmatrix.GetNrows();
   TMatrixDSym avgsystcov( navg );
   TMatrixDSym avgtotcov( navg );
-  MatrixMap avgCovariancesMap;
   for( MatrixMap::iterator mapitr= covariances.begin();
        mapitr != covariances.end(); mapitr++ ) {
     const string& errorkey= mapitr->first;
     TMatrixDSym cov= mapitr->second;
-    cov.Similarity( wm );
+    cov.Similarity( m_weightsmatrix );
     avgtotcov+= cov;
     if( errorkey.find( "stat" ) == string::npos ) avgsystcov+= cov;
-    avgCovariancesMap.insert( MatrixMap::value_type( errorkey, cov ) );
+    m_errorsmap.insert( MatrixMap::value_type( errorkey, cov ) );
   }
-  avgCovariancesMap.insert( MatrixMap::value_type( "syst", avgsystcov ) );
-  avgCovariancesMap.insert( MatrixMap::value_type( "total", avgtotcov ) );
-  return avgCovariancesMap;
+  m_errorsmap.insert( MatrixMap::value_type( "syst", avgsystcov ) );
+  m_errorsmap.insert( MatrixMap::value_type( "total", avgtotcov ) );
+  return;
 }
 
 void Blue::printInputs( std::ostream& ost ) const {
@@ -124,14 +141,12 @@ void Blue::printResults( std::ostream& ost ) const {
 }
 
 void Blue::printChisq( std::ostream& ost ) const {
-  TMatrixD wm= calcWeightsMatrix();
-  Int_t ndof= wm.GetNcols() - wm.GetNrows();
-  Double_t chisq= calcChisq();
-  Double_t chisqdof= chisq/Double_t(ndof);
-  Double_t pvalue= TMath::Prob( chisq, ndof );
+  Int_t ndof= m_weightsmatrix.GetNcols() - m_weightsmatrix.GetNrows();
+  Double_t chisqdof= m_chisq/Double_t(ndof);
+  Double_t pvalue= TMath::Prob( m_chisq, ndof );
   ost.precision( 2 );
   ost.setf( std::ios_base::fixed );
-  ost << "Chi^2= " << chisq << " for " << ndof << " d.o.f,"
+  ost << "Chi^2= " << m_chisq << " for " << ndof << " d.o.f,"
       << " chi^2/d.o.f= " << chisqdof;
   ost.precision( 4 );
   ost << ", P(chi^2)= " << pvalue << std::endl;
@@ -139,9 +154,8 @@ void Blue::printChisq( std::ostream& ost ) const {
 }
 
 void Blue::printWeights( std::ostream& ost ) const {
-  TMatrixD wm= calcWeightsMatrix();
-  Int_t navg= wm.GetNrows();
-  Int_t nvar= wm.GetNcols();
+  Int_t navg= m_weightsmatrix.GetNrows();
+  Int_t nvar= m_weightsmatrix.GetNcols();
   vector<string> uniquegroups= m_parser.getUniqueGroups();
   ost.precision( 4 );
   ost.setf( std::ios_base::fixed );
@@ -150,7 +164,7 @@ void Blue::printWeights( std::ostream& ost ) const {
     if( uniquegroups.size() > 1 ) txt+= " " + uniquegroups.at( iavg );
     ost << std::setw( 11 ) << txt+":";
     for( Int_t ivar= 0; ivar < nvar; ivar++ ) {
-      ost << " " << std::setw(10) << wm(iavg,ivar);
+      ost << " " << std::setw(10) << m_weightsmatrix(iavg,ivar);
     }
     ost << std::endl;
   }
@@ -158,11 +172,11 @@ void Blue::printWeights( std::ostream& ost ) const {
 }
 
 void Blue::printPulls( std::ostream& ost ) const {
-  printVector( calcPulls(), "Pulls:", ost );
+  printVector( m_pulls, "Pulls:", ost );
   return;
 }
 void Blue::printAverages( std::ostream& ost ) const {
-  printVector( calcAverage(), "Average:", ost );
+  printVector( m_average, "Average:", ost );
   return;
 }
 void Blue::printVector( const TVectorD& vec,
@@ -181,9 +195,8 @@ void Blue::printVector( const TVectorD& vec,
 void Blue::printErrors( std::ostream& ost ) const {
   ost.precision( 4 );
   ost.setf( std::ios_base::fixed );  
-  MatrixMap errorsmap= errorAnalysis();
-  for( MatrixMap::const_iterator mapitr= errorsmap.begin();
-       mapitr != errorsmap.end(); mapitr++ ) {
+  for( MatrixMap::const_iterator mapitr= m_errorsmap.begin();
+       mapitr != m_errorsmap.end(); mapitr++ ) {
     string errorkey= mapitr->first;
     TMatrixD covm= mapitr->second;
     ost << std::setw(11) << m_parser.stripLeadingDigits( errorkey )+":";
@@ -200,9 +213,8 @@ void Blue::printCorrelations( std::ostream& ost ) const {
   vector<string> uniquegroups= m_parser.getUniqueGroups();
   size_t navg= uniquegroups.size();
   if( navg > 1 ) {
-    MatrixMap errorsmap= errorAnalysis();
-    MatrixMap::const_iterator totitr= errorsmap.find( "total" );
-    if( totitr == errorsmap.end() ) {
+    MatrixMap::const_iterator totitr= m_errorsmap.find( "total" );
+    if( totitr == m_errorsmap.end() ) {
       ost << "Total covariance matrix not found" << std::endl;
       return;
     }
