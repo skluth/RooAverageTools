@@ -103,7 +103,7 @@ void Blue::printInputs( std::ostream& ost ) const {
 }
 
 void Blue::printResults( std::ostream& ost ) const {
-  ost << std::endl;
+  ost << "\nResults:" << std::endl;
   printChisq();
   ost << std::endl;
   m_parser.printNames( ost );
@@ -115,24 +115,24 @@ void Blue::printResults( std::ostream& ost ) const {
   if( nuniquegroups > 1 ) m_parser.printUniqueGroups( ost );
   printAverages( ost );
   printErrors( ost );
-  printCorrelations( ost );
+  if( nuniquegroups > 1 ) {
+    ost << std::endl;
+    printCorrelations( ost );
+  }
   ost << std::endl;
   return;
 }
 
 void Blue::printChisq( std::ostream& ost ) const {
   TMatrixD wm= calcWeightsMatrix();
-  Int_t navg= wm.GetNrows();
-  Int_t nvar= wm.GetNcols();
-  Int_t ndof= nvar-navg;
+  Int_t ndof= wm.GetNcols() - wm.GetNrows();
   Double_t chisq= calcChisq();
   Double_t chisqdof= chisq/Double_t(ndof);
   Double_t pvalue= TMath::Prob( chisq, ndof );
-  ost << "Results:" << std::endl;
   ost.precision( 2 );
   ost.setf( std::ios_base::fixed );
-  ost << "\nChi^2= " << chisq << " for " << ndof << " d.o.f,";
-  ost << " chi^2/d.o.f= " << chisqdof;
+  ost << "Chi^2= " << chisq << " for " << ndof << " d.o.f,"
+      << " chi^2/d.o.f= " << chisqdof;
   ost.precision( 4 );
   ost << ", P(chi^2)= " << pvalue << std::endl;
   return;
@@ -147,9 +147,7 @@ void Blue::printWeights( std::ostream& ost ) const {
   ost.setf( std::ios_base::fixed );
   for( Int_t iavg= 0; iavg < navg; iavg++ ) {
     string txt= "Weights";
-    if( uniquegroups.size() > 1 ) {
-      txt+= " " + uniquegroups.at( iavg );
-    }
+    if( uniquegroups.size() > 1 ) txt+= " " + uniquegroups.at( iavg );
     ost << std::setw( 11 ) << txt+":";
     for( Int_t ivar= 0; ivar < nvar; ivar++ ) {
       ost << " " << std::setw(10) << wm(iavg,ivar);
@@ -181,6 +179,8 @@ void Blue::printVector( const TVectorD& vec,
 }
 
 void Blue::printErrors( std::ostream& ost ) const {
+  ost.precision( 4 );
+  ost.setf( std::ios_base::fixed );  
   MatrixMap errorsmap= errorAnalysis();
   for( MatrixMap::const_iterator mapitr= errorsmap.begin();
        mapitr != errorsmap.end(); mapitr++ ) {
@@ -207,7 +207,7 @@ void Blue::printCorrelations( std::ostream& ost ) const {
       return;
     }
     TMatrixD totcov= totitr->second;
-    ost << "\nTotal correlations:\n  ";
+    ost << "Total correlations:\n  ";
     for( size_t iavg= 0; iavg < navg; iavg++ ) {
       ost << " " << std::setw( 5 ) << uniquegroups[iavg];
     }

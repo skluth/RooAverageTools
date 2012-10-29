@@ -100,20 +100,67 @@ class BluePrintTestFixture {
 public:
   BluePrintTestFixture() : blue( "valassi5.txt" ) {}
   Blue blue;
+  std::ostringstream osst;
 };
 
-// Declare test suite name and fixture class to BOOST:
 BOOST_FIXTURE_TEST_SUITE( blueprintsuite, BluePrintTestFixture )
 
-BOOST_AUTO_TEST_CASE( testprintInputs ) {
-  BOOST_MESSAGE( "testprintInputs" );
-  blue.printInputs();
-}
-BOOST_AUTO_TEST_CASE( testprintResults ) {
-  BOOST_MESSAGE( "testprintResults" );
-  blue.printResults();
+BOOST_AUTO_TEST_CASE( testprintChisq ) {
+  BOOST_MESSAGE( "testprintChisq" );
+  blue.printChisq( osst );
+  string obtained= osst.str();
+  string expected= "Chi^2= 1.23 for 2 d.o.f, chi^2/d.o.f= 0.62, P(chi^2)= 0.5404\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
 }
 
+BOOST_AUTO_TEST_CASE( testprintWeights ) {
+  BOOST_MESSAGE( "testprintWeights" );
+  blue.printWeights( osst );
+  string obtained= osst.str();
+  string expected= 
+    " Weights a:     0.8195     0.1805     0.0897    -0.0897\n"
+    " Weights b:     0.8076    -0.8076     0.0981     0.9019\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintPulls ) {
+  BOOST_MESSAGE( "testprintPulls" );
+  blue.printPulls( osst );
+  string obtained= osst.str();
+  string expected= "     Pulls:    -0.1377     0.9549    -0.5453     0.9556\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintAverages ) {
+  BOOST_MESSAGE( "testprintAverages" );
+  blue.printAverages( osst );
+  string obtained= osst.str();
+  string expected= "   Average:    10.6377    11.1358\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintErrors ) {
+  BOOST_MESSAGE( "testprintErrors" );
+  blue.printErrors( osst );
+  string obtained= osst.str();
+  string expected= 
+    "      stat:     0.8636     0.8963\n"
+    "       exp:     0.2714     0.2820\n"
+    "      syst:     0.2714     0.2820\n"
+    "     total:     0.9053     0.9397\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
+
+BOOST_AUTO_TEST_CASE( testprintCorrelations ) {
+  BOOST_MESSAGE( "testprintCorrelations" );
+  blue.printCorrelations( osst );
+  string obtained= osst.str();
+  string expected= "Total correlations:\n"
+    "       a     b\n"
+    " a  1.00  0.95\n"
+    " b  0.95  1.00\n";
+  BOOST_CHECK_EQUAL( obtained, expected );
+}
 
 
 BOOST_AUTO_TEST_SUITE_END()
