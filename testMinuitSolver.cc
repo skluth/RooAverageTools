@@ -38,27 +38,29 @@ void fcn( Int_t& npar, Double_t* grad, Double_t& fval, Double_t* par,
   return;
 }
 
-// Function object for use with MinuitSolver, its method calculate
-// is called by Minuit and is expected to return the objective
-// function value (aka chi^2):
+// Function object for use with MinuitSolver, its operator()
+// is called by a subclass of TMinuit and is expected to calculate
+// the objective function value (aka chi^2):
 class testmsf: public MinuitSolverFunction {
 public:
   testmsf( const TVectorD& mtop, const TVectorD& stat,
 	   const TVectorD& erra, const TVectorD& errb, const TVectorD& errc ) : 
     m_mtop( mtop ), m_stat( stat ), m_erra( erra ), m_errb( errb ), 
     m_errc( errc ) {}
-  Double_t calculate( const TVectorD& pars ) const {
+  void operator()( Int_t& npar, Double_t* grad, Double_t& fval, 
+		   Double_t* pars, Int_t iflag ) {
     Double_t ave= pars[0];
     Double_t pa= pars[1];
     Double_t pb= pars[2];
     Double_t pc= pars[3];
-    Double_t fval= 0.0;
+    fval= 0.0;
     for( Int_t ival= 0; ival < m_mtop.GetNoElements(); ival++ ) {
       Double_t term= ( m_mtop[ival] - ave + m_erra[ival]*pa + 
 		       m_errb[ival]*pb + m_errc[ival]*pc )/m_stat[ival];
       fval+= term*term;
     }
-    return fval + pa*pa + pb*pb + pc*pc;
+    fval+= pa*pa + pb*pb + pc*pc;
+    return;
   }
 private:
   TVectorD m_mtop, m_stat, m_erra, m_errb, m_errc;
@@ -79,9 +81,9 @@ public:
     parnames.push_back( "pc" );
     int ndof= 2;
 
-    minsol2= &(MinuitSolver::getInstance());
-    minsol2->configure( fcn, parnames, pars, parerrors, ndof );
-    minsol2->solve();
+    // minsol2= &(MinuitSolver::getInstance());
+    // minsol2->configure( fcn, parnames, pars, parerrors, ndof );
+    // minsol2->solve();
 
     Double_t mtopdata[3]= { 171.5, 173.1, 174.5 };
     Double_t statdata[3]= { 0.3, 0.33, 0.4 };
@@ -95,8 +97,7 @@ public:
     TVectorD errc( 3, errcdata );
     testmsf tmsf( mtop, stat, erra, errb, errc );
 
-    minsol= &(MinuitSolver::getInstance());
-    minsol->configure( tmsf, parnames, pars, parerrors, ndof );
+    minsol= new MinuitSolver( tmsf, parnames, pars, parerrors, ndof );
     minsol->solve();
 
   }

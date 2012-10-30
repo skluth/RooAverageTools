@@ -9,7 +9,7 @@
 #include "TString.h"
 
 // Minuit fcn:
-typedef void (* fcn_t)( Int_t&, Double_t*, Double_t&, Double_t*, Int_t );
+typedef void (*fcn_t)( Int_t&, Double_t*, Double_t&, Double_t*, Int_t );
 
 struct stat_t {
   Double_t min;
@@ -20,34 +20,33 @@ struct stat_t {
   Int_t status;
 };	
 
+// Interface for myTMinuit function objects:
 class MinuitSolverFunction {
 public:
-  virtual Double_t calculate( const TVectorD& pars ) const = 0;
+  virtual void operator()( Int_t&, Double_t*, Double_t&, Double_t*, Int_t )=0;
 };
 
+
+// Class to handle Minuit fits:
 class MinuitSolver {
-
-private:
-
-  MinuitSolver() {}
-  MinuitSolver( const MinuitSolver& ) {}
-  ~MinuitSolver();
 
 public:
 
-  static MinuitSolver& getInstance();
+  // Use plain TMinuit and a standard fcn:
+  MinuitSolver( fcn_t fcn, 
+		const std::vector<std::string>& parnames, 
+		const TVectorD& pars, 
+		const TVectorD& parerrors, 
+		int ndf, bool quiet=true, int maxpars=50 );
 
-  void configure( fcn_t fcn, 
-		  const std::vector<std::string>& parnames, 
-		  const TVectorD& pars, 
-		  const TVectorD& parerrors, 
-		  int ndf, bool quiet=true, int maxpars=50 );
+  // Use with function objects:
+  MinuitSolver( MinuitSolverFunction& msf, 
+		const std::vector<std::string>& parnames, 
+		const TVectorD& pars, 
+		const TVectorD& parerrors, 
+		int ndf, bool quiet=true, int maxpars=50 );
 
-  void configure( const MinuitSolverFunction& msf, 
-		  const std::vector<std::string>& parnames, 
-		  const TVectorD& pars, 
-		  const TVectorD& parerrors, 
-		  int ndf, bool quiet=true, int maxpars=50 );
+  ~MinuitSolver();
 
   //getter
   int getNdof() const { return m_ndof; }
@@ -68,8 +67,6 @@ public:
   //other
   void solve() const;
   void minuitCommand( std::string cmd ) const;
-
-  static void setMinuitSolverFunction( const MinuitSolverFunction& );
   
 private:
 
@@ -86,14 +83,6 @@ private:
   // Must be pointer due to non-constness of TMinuit
   TMinuit* m_minuit;
 
-  static void myfcn( Int_t& npar, Double_t* grad, Double_t& fval, 
-  		     Double_t* par, Int_t iflag );
-  static const MinuitSolverFunction* m_msf;
-
-
 };
-
-const MinuitSolverFunction* MinuitSolver::m_msf= 0;
-
 
 #endif
