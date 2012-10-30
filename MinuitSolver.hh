@@ -5,6 +5,8 @@
 #include <string>
 
 #include "TVectorD.h"
+#include "TMatrixD.h"
+#include "TMatrixDSym.h"
 #include "TMinuit.h"
 #include "TString.h"
 
@@ -53,8 +55,8 @@ public:
   TVectorD getUpar() const { return getPars().first; }
   TVectorD getUparErrors() const { return getPars().second; }
   std::vector<std::string> getUparNames() const { return m_parnames; }
-  TMatrixD getCovarianceMatrix() const;
-  TMatrixD getCorrelationMatrix() const;
+  TMatrixDSym getCovarianceMatrix() const;
+  TMatrixDSym getCorrelationMatrix() const;
   int getStatus() const { return getStat().status; }
   double getChisq() const { return getStat().min; }
 
@@ -73,14 +75,15 @@ private:
   std::pair<TVectorD,TVectorD> getPars() const;
   stat_t getStat() const;
   void printPars( TString option= ".4f" ) const;
-  void checkMaxpars( const TVectorD& pars, Int_t maxpars );
+  void checkMaxpars( Int_t maxpars );
   void setupParameters();
+  void initialise( Int_t maxpars, bool quiet );
 
   std::vector<std::string> m_parnames;
   TVectorD m_pars;
   TVectorD m_parerrors;
   int m_ndof;
-  // Must be pointer due to non-constness of TMinuit
+  // Must be pointer due to non-constness of TMinuit:
   TMinuit* m_minuit;
 
 };

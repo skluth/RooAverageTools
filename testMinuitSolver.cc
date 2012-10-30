@@ -66,25 +66,20 @@ private:
   TVectorD m_mtop, m_stat, m_erra, m_errb, m_errc;
 };
 
-// Test fixture for all tests:
+// Tests for MinuitSolver tests with function objects:
+
 class MinuitSolverTestFixture {
 public:
   MinuitSolverTestFixture() {
-    Double_t tmppar[4]= { 172., 0., 0., 0. };
+    Double_t tmppar[4]= { 172.0, 0.0, 0.0, 0.0 };
     TVectorD pars( 4, tmppar );
-    Double_t tmpparerr[4]= { 2., 1., 1., 1. };
+    Double_t tmpparerr[4]= { 2.0, 1.0, 1.0, 1.0 };
     TVectorD parerrors( 4, tmpparerr );
     vector<string> parnames;
     parnames.push_back( "average" );
     parnames.push_back( "pa" );
     parnames.push_back( "pb" );
     parnames.push_back( "pc" );
-    int ndof= 2;
-
-    // minsol2= &(MinuitSolver::getInstance());
-    // minsol2->configure( fcn, parnames, pars, parerrors, ndof );
-    // minsol2->solve();
-
     Double_t mtopdata[3]= { 171.5, 173.1, 174.5 };
     Double_t statdata[3]= { 0.3, 0.33, 0.4 };
     Double_t erradata[3]= { 1.1, 1.3, 1.5 };
@@ -96,68 +91,66 @@ public:
     TVectorD errb( 3, errbdata );
     TVectorD errc( 3, errcdata );
     testmsf tmsf( mtop, stat, erra, errb, errc );
-
+    int ndof= 2;
     minsol= new MinuitSolver( tmsf, parnames, pars, parerrors, ndof );
     minsol->solve();
+
+    minsolfcn= new MinuitSolver( fcn, parnames, pars, parerrors, ndof );
+    minsolfcn->solve();
 
   }
   virtual ~MinuitSolverTestFixture() {}
   MinuitSolver* minsol;
-  MinuitSolver* minsol2;
+  MinuitSolver* minsolfcn;
 };
 
-// Declare test suite name and fixture class to BOOST:
 BOOST_FIXTURE_TEST_SUITE( minuitsolversuite, MinuitSolverTestFixture )
-
-// Test cases:
 
 BOOST_AUTO_TEST_CASE( testgetStatus ) {
   BOOST_MESSAGE( "testgetStatus" );
   int hstat= minsol->getStatus();
-  BOOST_CHECK_MESSAGE( hstat == 3, 
-		       "Something wrong with solve() status= " << hstat );
+  BOOST_CHECK_EQUAL( hstat, 3 );
 }
 
 BOOST_AUTO_TEST_CASE( testgetChisq ) {
   BOOST_MESSAGE( "testgetChisq" );
   Double_t chisq= minsol->getChisq();
   Double_t expchisq= 3.58037721;
-  BOOST_CHECK_CLOSE( chisq , expchisq , 1e-4 );
+  BOOST_CHECK_CLOSE( chisq , expchisq , 1.0e-4 );
 }
 
-BOOST_AUTO_TEST_CASE( test_getNdof ) {
+BOOST_AUTO_TEST_CASE( testgetNdof ) {
   BOOST_MESSAGE( "testgetNdof" );
   int tmp_ndof= minsol->getNdof();
   int exp_ndof= 2;
-  BOOST_CHECK_MESSAGE( tmp_ndof== exp_ndof, 
-		       "Something wrong with getNdof()" );
+  BOOST_CHECK_EQUAL( tmp_ndof, exp_ndof );
 }
 
-BOOST_AUTO_TEST_CASE( test_getUpar ) {
+BOOST_AUTO_TEST_CASE( testgetUpar ) {
   BOOST_MESSAGE( "testgetUpar" );
   TVectorD pars= minsol->getUpar();
   Double_t expectedpars[4]= { 167.1022776, -0.48923998, 
 			      -1.13417736, -1.21202615 };
   TVectorD exppars( 4, expectedpars );
   for( int i= 0; i < exppars.GetNoElements(); i++ ) {
-    BOOST_CHECK_CLOSE( pars[i], exppars[i], 1e-4 );
+    BOOST_CHECK_CLOSE( pars[i], exppars[i], 1.0e-4 );
   }
 }
 
-BOOST_AUTO_TEST_CASE( test_getUparErrors ) {
+BOOST_AUTO_TEST_CASE( testgetUparErrors ) {
   BOOST_MESSAGE( "testgetUparErrors" );
   TVectorD parerrors= minsol->getUparErrors();
   Double_t expectedparerrors[4]= { 1.4395944, 0.96551507, 
 				   0.78581713, 0.72292831 };
   TVectorD expparerrors( 4, expectedparerrors );
   for(int i= 0; i < expparerrors.GetNoElements(); i++ ) {
-    BOOST_CHECK_CLOSE( parerrors[i], expparerrors[i], 1e-4 );
+    BOOST_CHECK_CLOSE( parerrors[i], expparerrors[i], 1.0e-4 );
   }
 }
 
-BOOST_AUTO_TEST_CASE( test_getCovarianceMatrix ) {
+BOOST_AUTO_TEST_CASE( testgetCovarianceMatrix ) {
   BOOST_MESSAGE( "testgetCovarianceMatrix" );
-  TMatrixD cov_matrix= minsol->getCovarianceMatrix();
+  TMatrixDSym cov_matrix= minsol->getCovarianceMatrix();
   double exp_cov_matrix[4][4]= {
     { 2.0724326179335506, 0.51824661355716117, 
       -0.5889555125183219, 0.74832061921642412},
@@ -170,14 +163,14 @@ BOOST_AUTO_TEST_CASE( test_getCovarianceMatrix ) {
   };
   for( int i= 0; i < 4; i++ ) {
     for( int j= 0; j < 4; j++ ) {
-      BOOST_CHECK_CLOSE( cov_matrix[i][j], exp_cov_matrix[i][j], 1e-4 ); 
+      BOOST_CHECK_CLOSE( cov_matrix[i][j], exp_cov_matrix[i][j], 1.0e-4 ); 
     }
   }
 }
 
-BOOST_AUTO_TEST_CASE( test_getCorrelationMatrix ) {
+BOOST_AUTO_TEST_CASE( testgetCorrelationMatrix ) {
   BOOST_MESSAGE( "testgetCorrelationMatrix" );
-  TMatrixD cor_matrix= minsol->getCorrelationMatrix();
+  TMatrixDSym cor_matrix= minsol->getCorrelationMatrix();
   double exp_cor_matrix[4][4]= {
     { 1.0000, 0.37285257870057764, -0.52061987169579238, 0.71903860509038131 },
     { 0.37285257870057764, 1.0000, -0.19814627795415776, -0.22596796708443162 },
@@ -186,8 +179,34 @@ BOOST_AUTO_TEST_CASE( test_getCorrelationMatrix ) {
   };
   for( int i= 0; i < 4; i++ ) {
     for( int j= 0; j < 4; j++ ) {
-      BOOST_CHECK_CLOSE( cor_matrix[i][j], exp_cor_matrix[i][j], 1e-4 );
+      BOOST_CHECK_CLOSE( cor_matrix[i][j], exp_cor_matrix[i][j], 1.0e-4 );
     }
+  }
+}
+
+BOOST_AUTO_TEST_CASE( testMinuitSolverFCN ) {
+  BOOST_MESSAGE( "testMinuitSolverFCN" );
+  int hstat= minsolfcn->getStatus();
+  BOOST_CHECK_EQUAL( hstat, 3 );
+  Double_t chisq= minsolfcn->getChisq();
+  Double_t expchisq= 3.58037721;
+  BOOST_CHECK_CLOSE( chisq , expchisq , 1.0e-4 );
+  int ndof= minsolfcn->getNdof();
+  int exp_ndof= 2;
+  BOOST_CHECK_EQUAL( ndof, exp_ndof );
+  TVectorD pars= minsolfcn->getUpar();
+  Double_t expectedpars[4]= { 167.1022776, -0.48923998, 
+			      -1.13417736, -1.21202615 };
+  TVectorD exppars( 4, expectedpars );
+  for( int i= 0; i < exppars.GetNoElements(); i++ ) {
+    BOOST_CHECK_CLOSE( pars[i], exppars[i], 1.0e-4 );
+  }
+  TVectorD parerrors= minsolfcn->getUparErrors();
+  Double_t expectedparerrors[4]= { 1.4395944, 0.96551507, 
+				   0.78581713, 0.72292831 };
+  TVectorD expparerrors( 4, expectedparerrors );
+  for(int i= 0; i < expparerrors.GetNoElements(); i++ ) {
+    BOOST_CHECK_CLOSE( parerrors[i], expparerrors[i], 1.0e-4 );
   }
 }
 

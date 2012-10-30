@@ -2,9 +2,11 @@
 #include "MinuitSolver.hh"
 #include <vector>
 #include <cmath>
+#include <sstream>
 #include "TMath.h"
 
 using std::string;
+using std::stringstream;
 using std::vector;
 
 // Subclass of TMinuit for use with MinuitSolverFunction function objects:
@@ -21,6 +23,23 @@ private:
   MinuitSolverFunction& m_msf;
 };
 
+// Errors from Minuit:
+class MinuitError: public std::exception {
+public:
+  MinuitError( int ierr, const char* txt ) : 
+    errorcode( ierr ), message( txt ) {}
+  virtual const char* what() const throw() {
+    stringstream strstr;
+    strstr << "Minuit error: " << errorcode << " "
+	   << message;
+    string txt= strstr.str();
+    return txt.c_str();
+  }
+private:
+  int errorcode;
+  const char* message;
+};
+
 // Configuration for use with standard Minuit fcn:
 MinuitSolver::MinuitSolver( fcn_t fcn, 
 			    const vector<string>& parnames, 
@@ -33,9 +52,8 @@ MinuitSolver::MinuitSolver( fcn_t fcn,
   m_ndof( ndof ),
   m_minuit( new TMinuit( maxpars ) ) {
   m_minuit->SetFCN( fcn );
-  checkMaxpars( pars, maxpars );
-  if( quiet ) minuitCommand( "SET PRI -1" );
-  setupParameters();
+  initialise( maxpars, quiet );
+  return;
 }
 
 // Configuration for use with MinuitSolverFunction:
@@ -49,16 +67,24 @@ MinuitSolver::MinuitSolver( MinuitSolverFunction& msf,
   m_parerrors( parerrors ),
   m_ndof( ndof ),
   m_minuit( new myTMinuit( msf, maxpars ) ) {
-  checkMaxpars( pars, maxpars );
-  if( quiet ) minuitCommand( "SET PRI -1" );
-  setupParameters();
+  initialise( maxpars, quiet );
+  return;
 }
 
 // Ctor helpers:
-void MinuitSolver::checkMaxpars( const TVectorD& pars, Int_t maxpars ) {
-  if( pars.GetNoElements() > maxpars ) {
-    std::cerr << "More than " << maxpars << " parameters, increase maxpars" 
-	      << std::endl;
+void MinuitSolver::initialise( Int_t maxpars, bool quiet ) {
+  checkMaxpars( maxpars );
+  if( quiet ) minuitCommand( "SET PRI -1" );
+  setupParameters();
+  return;
+}
+
+void MinuitSolver::checkMaxpars( Int_t maxpars ) {
+  if( m_pars.GetNoElements() > maxpars ) {
+    stringstream strstr;
+    strstr << "More than " << maxpars << " parameters, increase maxpars";
+    string str= strstr.str();
+    throw MinuitError( 0, str.c_str() );
   }
   return;
 }
@@ -69,7 +95,8 @@ void MinuitSolver::setupParameters() {
 					  m_pars(iPar), m_parerrors(iPar), 
 					  0.0, 0.0);
     if( error != 0 ) {
-      std::cerr << "Minuit define parameter error: " << error << std::endl;
+      //      std::cerr << "Minuit define parameter error: " << error << std::endl;
+      throw MinuitError( error, "in DefineParameter" );
     }
   }
   return;
@@ -95,23 +122,24 @@ std::pair<TVectorD,TVectorD> MinuitSolver::getPars() const {
   for( int iPar= 0; iPar < nPars; ++iPar ) {
     int ierr= m_minuit->GetParameter( iPar, pars(iPar), parerrors(iPar) );
     if( ierr < 0 ) {
-      std::cerr << "Parameter " << iPar << " not defined!" << std::endl;
+      //      std::cerr << "Parameter " << iPar << " not defined!" << std::endl;
+      throw MinuitError( ierr, "in GetParameter" );
     }
   }
   return std::pair<TVectorD,TVectorD>( pars, parerrors );
 }
 
-TMatrixD MinuitSolver::getCovarianceMatrix() const {
+TMatrixDSym MinuitSolver::getCovarianceMatrix() const {
   int nPars= m_pars.GetNoElements();
-  TMatrixD covmat( nPars, nPars );
+  TMatrixDSym covmat( nPars );
   m_minuit->mnemat( covmat.GetMatrixArray(), nPars );
   return covmat;
 }
 
-TMatrixD MinuitSolver::getCorrelationMatrix() const {
+TMatrixDSym MinuitSolver::getCorrelationMatrix() const {
   int nPars= m_pars.GetNoElements();
-  TMatrixD corrmat( nPars, nPars );
-  TMatrixD covmat( getCovarianceMatrix() );
+  TMatrixDSym covmat( getCovarianceMatrix() );
+  TMatrixDSym corrmat( nPars );
   for( int i= 0; i < nPars; ++i ) {
     for( int j= 0; j < nPars; ++j ) {
       corrmat(i,j)= covmat(i,j)/sqrt(covmat(i,i)*covmat(j,j));
@@ -166,8 +194,10 @@ void MinuitSolver::solve() const {
 void MinuitSolver::minuitCommand( string command ) const {
   Int_t error= m_minuit->Command( command.c_str() );
   if( error != 0 ) {
-    std::cerr << "Minuit command " << command << " failed: " 
-	      << error << std::endl;
+    // std::cerr << "Minuit command " << command << " failed: " 
+    // 	      << error << std::endl;
+    string txt= "in "+command;
+    throw MinuitError( error, txt.c_str() ); 
   }
   return;
 }
